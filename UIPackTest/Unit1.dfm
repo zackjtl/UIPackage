@@ -39,10 +39,9 @@ object Form1: TForm1
       Margins.Right = 2
       Margins.Bottom = 2
       BorderColor = clGray
-      Color = clSkyBlue
-      Radius = 10
+      Color = clYellow
+      Radius = 30
       RoundedCorner = [LT, RT, LB, RB]
-      ShadowWidth = 15
       ShadowColorEnd = clBlack
     end
   end

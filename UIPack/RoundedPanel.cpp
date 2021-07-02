@@ -170,7 +170,7 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 
 	// top left
 
-	if (FRoundedCorner.Contains(eRC::LT)) { // LT
+	if (FRoundedCorner.Contains(eRC::LT) || (Dia == 0)) { // LT
 		Path->AddArc(corner, 180, 90);
 	}
 	else {
@@ -187,10 +187,10 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 		Rect.Height -= 1;
 	}
 
-  // top right
+	// top right
 	corner.X += (Rect.Width - Dia - 1);
 
-	if (FRoundedCorner.Contains(eRC::RT)) {
+	if (FRoundedCorner.Contains(eRC::RT) || (Dia == 0)) {
 		Path->AddArc(corner, 270, 90);
 	}
 	else {
@@ -201,7 +201,7 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 	// bottom right
 	corner.Y += (Rect.Height - Dia - 1);
 
-	if (FRoundedCorner.Contains(eRC::RB)) {
+	if (FRoundedCorner.Contains(eRC::RB) || (Dia == 0)) {
 		Path->AddArc(corner,   0, 90);
 	}
 	else {
@@ -212,7 +212,7 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 	// bottom left
 	corner.X -= (Rect.Width - Dia - 1);
 
-	if (FRoundedCorner.Contains(eRC::LB)) {
+	if (FRoundedCorner.Contains(eRC::LB) || (Dia == 0)) {
 		Path->AddArc(corner,  90, 90);
 	}
 	else {
@@ -285,7 +285,7 @@ void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
 	}
 	else {
 		Gdiplus::SolidBrush brush(BodyColor);
-   	graph.FillPath(&brush, &path);
+		graph.FillPath(&brush, &path);
 	}
 
 	// draw the border last so it will be on top
@@ -348,21 +348,28 @@ void __fastcall TRoundedPanel::Paint()
 	////DrawParentImage(this, memoryHDC, true);
 
 	// Under trying
+	Gdiplus::Graphics graph(memoryHDC);
+
+	////graph.FillRectangle()
+
 	int saveIdx = SaveDC(memoryHDC);
-	Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt)PRF_CLIENT);
+	Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt)PRF_ERASEBKGND | PRF_CHILDREN | PRF_NONCLIENT);
+
 	RestoreDC(memoryHDC, saveIdx);
 
-	Gdiplus::Graphics graph(memoryHDC);
 #else
 	DrawParentImage(this, Canvas->Handle, true);
 	Gdiplus::Graphics graph(Canvas->Handle);
 #endif
 
 	if (!FTransparent) {
-		if (FShadowWidth)
-			FillRoundRect(graph, Gdiplus::Rect(FShadowWidth, FShadowWidth, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, FRadius, true);
+		FillRoundRect(graph, Gdiplus::Rect(0, 0, Width, Height), Color, Color, btNone, 0, 0, true);
 
-		FillRoundRect(graph, Gdiplus::Rect(bodyX, bodyY, bodyWidth, bodyHeight), bodyColor, borderColor, FBorderType, BorderWidth, FRadius, false);
+		if (FShadowWidth) {
+			FillRoundRect(graph, Gdiplus::Rect(FShadowWidth, FShadowWidth, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, FRadius, true);
+		}
+
+		FillRoundRect(graph, Gdiplus::Rect(bodyX+10, bodyY+10, bodyWidth-10, bodyHeight-10), bodyColor, borderColor, FBorderType, BorderWidth, FRadius, false);
 	}
 #if defined(DOUBLE_BUFFERING)
 	::BitBlt(Canvas->Handle, 0, 0, ClientWidth, ClientHeight, memoryHDC, 0, 0, SRCCOPY);
