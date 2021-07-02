@@ -5,6 +5,7 @@
 #pragma hdrstop
 
 #include "RoundedPanel.h"
+#include "DrawFunc.h"
 #include <Vcl.Buttons.hpp>
 #pragma package(smart_init)
 using namespace Gdiplus;
@@ -29,6 +30,8 @@ __fastcall TRoundedPanel::TRoundedPanel(TComponent* Owner)
   FImagesChangeLink = new TChangeLink();
   FImagesChangeLink->OnChange = OnImageChange;
 	FLastRoundedCorner = -1;
+
+  ////this->DoubleBuffered = true;
 }
 //---------------------------------------------------------------------------
 __fastcall TRoundedPanel::~TRoundedPanel()
@@ -41,6 +44,31 @@ Gdiplus::Color ColorFromTColor(TColor Val)
 	Gdiplus::Color color;
 	color.SetFromCOLORREF(Val);
 	return color;
+}
+//---------------------------------------------------------------------------
+void __fastcall TRoundedPanel::OnWmEraseBackground(TMessage& Msg)
+{
+	if (FTransparent) {
+		if (Parent != NULL && Parent->DoubleBuffered) {
+
+    }
+  }
+
+#if 0
+  if FTransparent and PaintClientArea then
+  begin
+    if ( Parent <> nil ) and Parent.DoubleBuffered then
+      PerformEraseBackground( Self, Msg.DC );
+    DrawParentImage( Self, Msg.DC, True );
+
+    // Do not call inherited -- prevents TWinControl.WMEraseBkgnd from
+    // erasing background. Set Msg.Result to 1 to indicate background is painted
+    // by the control.
+    Msg.Result := 1;
+  end
+  else
+    inherited;
+#endif
 }
 //---------------------------------------------------------------------------
 #define PointFrom(P, ShiftX, ShiftY) Gdiplus::Point(P.X + ShiftX, P.Y + ShiftY)
@@ -196,7 +224,7 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 	Path->CloseFigure();
 }
 //---------------------------------------------------------------------------
-void TRoundedPanel::FillRoundRect(TCanvas* canvas,
+void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
 																	Gdiplus::Rect Rect,
 																	Gdiplus::Color BodyColor,
 																	Gdiplus::Color BorderColor,
@@ -214,7 +242,7 @@ void TRoundedPanel::FillRoundRect(TCanvas* canvas,
 	}
   int dia = 2 * Radius;
 
-	Gdiplus::Graphics graph(canvas->Handle);
+	////Gdiplus::Graphics graph(canvas->Handle);
 	graph.SetSmoothingMode(SmoothingModeHighQuality);
 
 	// set to pixel mode
@@ -232,15 +260,6 @@ void TRoundedPanel::FillRoundRect(TCanvas* canvas,
 	GetRoundRectPath(&path, Rect, dia);
 
 	// fill
-
-	//Gdiplus::Color endColor;
-	//endColor.SetFromCOLORREF(clWhite);
-	//Gdiplus::PathGradientBrush brush(Gdiplus::Point(Rect.X+Rect.Width-1, Rect.Y+Rect.Height-1),
-	//																	 Gdiplus::Point(Rect.X, Rect.Y),
-	//																	 endColor,
-	//																	 BodyColor
-	//																	 );
-
 	//Gdiplus::SolidBrush brush(BodyColor);
 
 	if (Gradient) {
@@ -315,11 +334,43 @@ void __fastcall TRoundedPanel::Paint()
 	//shadowColorStart.SetValue(shadowColorStart.GetValue() & 0x00FFFFFF);
 	shadowColorEnd.SetValue(shadowColorEnd.GetValue() & 0x00FFFFFF);
 
-	if (FShadowWidth)
-		FillRoundRect(Canvas, Gdiplus::Rect(FShadowWidth, FShadowWidth, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, FRadius, true);
+#define DOUBLE_BUFFERING 1
 
-	FillRoundRect(Canvas, Gdiplus::Rect(bodyX, bodyY, bodyWidth, bodyHeight), bodyColor, borderColor, FBorderType, BorderWidth, FRadius, false);
+#if defined(DOUBLE_BUFFERING)
+	HDC memoryHDC = CreateCompatibleDC(Canvas->Handle);
+	HBITMAP hMemoryBmp = CreateCompatibleBitmap(Canvas->Handle, Width, Height);
+	HBITMAP hOldBmp = (HBITMAP)SelectObject(memoryHDC, hMemoryBmp);
 
+	// To copy the parent as background
+	////HDC wnhdc = GetWindowDC(this->Parent->Handle);
+	////BitBlt(memoryHDC, 0, 0, Width, Height, wnhdc, Left, Top, SRCCOPY);
+
+	////DrawParentImage(this, memoryHDC, true);
+
+	// Under trying
+	int saveIdx = SaveDC(memoryHDC);
+	Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt)PRF_CLIENT);
+	RestoreDC(memoryHDC, saveIdx);
+
+	Gdiplus::Graphics graph(memoryHDC);
+#else
+	DrawParentImage(this, Canvas->Handle, true);
+	Gdiplus::Graphics graph(Canvas->Handle);
+#endif
+
+	if (!FTransparent) {
+		if (FShadowWidth)
+			FillRoundRect(graph, Gdiplus::Rect(FShadowWidth, FShadowWidth, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, FRadius, true);
+
+		FillRoundRect(graph, Gdiplus::Rect(bodyX, bodyY, bodyWidth, bodyHeight), bodyColor, borderColor, FBorderType, BorderWidth, FRadius, false);
+	}
+#if defined(DOUBLE_BUFFERING)
+	::BitBlt(Canvas->Handle, 0, 0, ClientWidth, ClientHeight, memoryHDC, 0, 0, SRCCOPY);
+
+	SelectObject(memoryHDC, hOldBmp);
+	DeleteObject(hMemoryBmp);
+	DeleteDC(memoryHDC);
+#endif
 
 #if 0
 	Canvas->Font->Size = 12;
@@ -372,6 +423,12 @@ void __fastcall TRoundedPanel::SetShadowColorEnd(TColor Value)
 {
 	FShadowColorEnd = Value;
 	Invalidate();
+}
+//---------------------------------------------------------------------------
+void __fastcall TRoundedPanel::SetTransparent(bool Value)
+{
+	FTransparent = Value;
+  Invalidate();
 }
 //---------------------------------------------------------------------------
 void __fastcall TRoundedPanel::SetRadius(unsigned int Radius)

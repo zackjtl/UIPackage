@@ -1,5 +1,4 @@
 //---------------------------------------------------------------------------
-
 #ifndef RoundedPanelH
 #define RoundedPanelH
 //---------------------------------------------------------------------------
@@ -9,6 +8,7 @@
 #include <Vcl.ExtCtrls.hpp>
 #include <Vcl.Imaging.pngimage.hpp>
 #include <Gdiplus.h>
+#include "UserMsgs.h"
 using namespace Gdiplus;
 //---------------------------------------------------------------------------
 enum eBorderType {
@@ -47,6 +47,8 @@ private:
 
 	int FLastRoundedCorner;
 
+  bool FTransparent;
+
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	ULONG_PTR  gdiplusToken;
 
@@ -65,7 +67,7 @@ protected:
 	void GetBottomBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius);
 
 	void GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Dia);
-	void FillRoundRect(TCanvas* Canvas,
+	void FillRoundRect(Gdiplus::Graphics& graph,
 										 Gdiplus::Rect Rect,
 										 Gdiplus::Color BodyColor,
 										 Gdiplus::Color BorderColor,
@@ -75,6 +77,12 @@ protected:
 										 bool Gradient);
 
 	void CheckMinSize();
+
+	void __fastcall OnWmEraseBackground(TMessage& Msg);
+
+	BEGIN_MESSAGE_MAP
+	MESSAGE_HANDLER(WM_ERASE_BKGND, TMessage, OnWmEraseBackground)
+	END_MESSAGE_MAP(TCustomPanel)
 
 public:
 	__fastcall TRoundedPanel(TComponent* Owner);
@@ -92,6 +100,8 @@ public:
 	void __fastcall SetShadowColorStart(TColor Value);
 	void __fastcall SetShadowColorEnd(TColor Value);
 
+  void __fastcall SetTransparent(bool Value);
+
 	TCanvas* __fastcall GetCanvas() {return Canvas;}
 
 __published:
@@ -107,6 +117,7 @@ __published:
 
 	__property  TColor ShadowColorStart = {read=FShadowColorStart, write=SetShadowColorStart, default=clBlack};
 	__property  TColor ShadowColorEnd = {read=FShadowColorEnd, write=SetShadowColorEnd, default=clWhite};
+  __property  bool Transparent = {read=FTransparent, write=SetTransparent, default=false};
 
 };
 //---------------------------------------------------------------------------

@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{B7D3BCF8-C403-451F-83B4-565EC30B67C3}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="UIPack\UIPackage.cbproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="UIPackTest\Project1.cbproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="UIPackage">
+        <MSBuild Projects="UIPack\UIPackage.cbproj"/>
+    </Target>
+    <Target Name="UIPackage:Clean">
+        <MSBuild Projects="UIPack\UIPackage.cbproj" Targets="Clean"/>
+    </Target>
+    <Target Name="UIPackage:Make">
+        <MSBuild Projects="UIPack\UIPackage.cbproj" Targets="Make"/>
+    </Target>
+    <Target Name="Project1">
+        <MSBuild Projects="UIPackTest\Project1.cbproj"/>
+    </Target>
+    <Target Name="Project1:Clean">
+        <MSBuild Projects="UIPackTest\Project1.cbproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Project1:Make">
+        <MSBuild Projects="UIPackTest\Project1.cbproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="UIPackage;Project1"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="UIPackage:Clean;Project1:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="UIPackage:Make;Project1:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
