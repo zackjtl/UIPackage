@@ -151,6 +151,24 @@ void TRoundedPanel::GetBottomBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rec
 	Path->CloseFigure();
 }
 //---------------------------------------------------------------------------
+void TRoundedPanel::GetRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect)
+{
+	// begin path
+	Path->Reset();
+
+	Gdiplus::Point l_t(Rect.X, Rect.Y);
+	Gdiplus::Point r_t(Rect.X + Rect.Width - 1, Rect.Y);
+	Gdiplus::Point r_b(r_t.X, Rect.Y + Rect.Height - 1);
+	Gdiplus::Point l_b(l_t.X, r_b.Y);
+
+	Path->AddLine(l_t, r_t);
+	Path->AddLine(r_t, r_b);
+	Path->AddLine(r_b, l_b);
+	Path->AddLine(l_b, l_t);
+
+	Path->CloseFigure();
+}
+//---------------------------------------------------------------------------
 void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Dia)
 {
 	// diameter can't exceed width or height
@@ -170,7 +188,7 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 
 	// top left
 
-	if (FRoundedCorner.Contains(eRC::LT) || (Dia == 0)) { // LT
+	if (FRoundedCorner.Contains(eRC::LT)) { // LT
 		Path->AddArc(corner, 180, 90);
 	}
 	else {
@@ -190,7 +208,7 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 	// top right
 	corner.X += (Rect.Width - Dia - 1);
 
-	if (FRoundedCorner.Contains(eRC::RT) || (Dia == 0)) {
+	if (FRoundedCorner.Contains(eRC::RT)) {
 		Path->AddArc(corner, 270, 90);
 	}
 	else {
@@ -201,7 +219,7 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 	// bottom right
 	corner.Y += (Rect.Height - Dia - 1);
 
-	if (FRoundedCorner.Contains(eRC::RB) || (Dia == 0)) {
+	if (FRoundedCorner.Contains(eRC::RB)) {
 		Path->AddArc(corner,   0, 90);
 	}
 	else {
@@ -212,7 +230,7 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 	// bottom left
 	corner.X -= (Rect.Width - Dia - 1);
 
-	if (FRoundedCorner.Contains(eRC::LB) || (Dia == 0)) {
+	if (FRoundedCorner.Contains(eRC::LB)) {
 		Path->AddArc(corner,  90, 90);
 	}
 	else {
@@ -249,7 +267,6 @@ void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
 	int oldPageUnit = graph.SetPageUnit(UnitPixel);
 
 	// define the pen
-
 	Gdiplus::Pen pen(BorderColor, BWidth);
 	pen.SetAlignment(PenAlignmentCenter);
 
@@ -257,11 +274,15 @@ void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
 	GraphicsPath path;
 
 	// get path
-	GetRoundRectPath(&path, Rect, dia);
+	if (dia > 0) {
+		GetRoundRectPath(&path, Rect, dia);
+	}
+	else {
+    GetRectPath(&path, Rect);
+  }
 
 	// fill
 	//Gdiplus::SolidBrush brush(BodyColor);
-
 	if (Gradient) {
 		Gdiplus::PathGradientBrush brush(&path);
 		brush.SetCenterColor(BodyColor);
@@ -281,6 +302,7 @@ void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
 		int surroundColorCnt = 1;
 
 		brush.SetSurroundColors(surroundClrs, &surroundColorCnt);
+
 		graph.FillPath(&brush, &path);
 	}
 	else {
@@ -289,30 +311,32 @@ void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
 	}
 
 	// draw the border last so it will be on top
-	if (BT == btNormal)
-		graph.DrawPath(&pen, &path);
-	else {
-		if (BT == btTopOnly || BT == btHorizontal) {
-			GraphicsPath bound;
-			GetTopBoundPath(&bound, Rect, Radius);
-			graph.DrawPath(&pen, &bound);
+	if (dia != 0) {
+		if (BT == btNormal)
+			graph.DrawPath(&pen, &path);
+		else {
+			if (BT == btTopOnly || BT == btHorizontal) {
+				GraphicsPath bound;
+				GetTopBoundPath(&bound, Rect, Radius);
+				graph.DrawPath(&pen, &bound);
+			}
+			if (BT == btBottomOnly || BT == btHorizontal) {
+				GraphicsPath bound;
+				GetBottomBoundPath(&bound, Rect, Radius);
+				graph.DrawPath(&pen, &bound);
+			}
+			if (BT == btLeftOnly || BT == btVertical) {
+				GraphicsPath bound;
+				GetLeftBoundPath(&bound, Rect, Radius);
+				graph.DrawPath(&pen, &bound);
+			}
+			if (BT == btRightOnly || BT == btVertical) {
+				GraphicsPath bound;
+				GetRightBoundPath(&bound, Rect, Radius);
+				graph.DrawPath(&pen, &bound);
+			}
 		}
-		if (BT == btBottomOnly || BT == btHorizontal) {
-			GraphicsPath bound;
-			GetBottomBoundPath(&bound, Rect, Radius);
-			graph.DrawPath(&pen, &bound);
-		}
-		if (BT == btLeftOnly || BT == btVertical) {
-			GraphicsPath bound;
-			GetLeftBoundPath(&bound, Rect, Radius);
-			graph.DrawPath(&pen, &bound);
-		}
-		if (BT == btRightOnly || BT == btVertical) {
-			GraphicsPath bound;
-			GetRightBoundPath(&bound, Rect, Radius);
-			graph.DrawPath(&pen, &bound);
-		}
-  }
+	}
 	// restore page unit
 	graph.SetPageUnit((Unit)oldPageUnit);
 }
@@ -350,10 +374,13 @@ void __fastcall TRoundedPanel::Paint()
 	// Under trying
 	Gdiplus::Graphics graph(memoryHDC);
 
-	////graph.FillRectangle()
-
 	int saveIdx = SaveDC(memoryHDC);
-	Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt)PRF_ERASEBKGND | PRF_CHILDREN | PRF_NONCLIENT);
+
+	TPoint p;
+	GetViewportOrgEx(memoryHDC, &p);
+	SetViewportOrgEx(memoryHDC, p.x - this->Left, p.y - this->Top, NULL);
+	IntersectClipRect(memoryHDC, 0, 0, Parent->ClientWidth, Parent->ClientHeight);
+	Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt) PRF_CLIENT | PRF_CHILDREN);
 
 	RestoreDC(memoryHDC, saveIdx);
 
@@ -363,13 +390,10 @@ void __fastcall TRoundedPanel::Paint()
 #endif
 
 	if (!FTransparent) {
-		FillRoundRect(graph, Gdiplus::Rect(0, 0, Width, Height), Color, Color, btNone, 0, 0, true);
-
 		if (FShadowWidth) {
 			FillRoundRect(graph, Gdiplus::Rect(FShadowWidth, FShadowWidth, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, FRadius, true);
 		}
-
-		FillRoundRect(graph, Gdiplus::Rect(bodyX+10, bodyY+10, bodyWidth-10, bodyHeight-10), bodyColor, borderColor, FBorderType, BorderWidth, FRadius, false);
+		FillRoundRect(graph, Gdiplus::Rect(bodyX, bodyY, bodyWidth, bodyHeight), bodyColor, borderColor, FBorderType, BorderWidth, FRadius, false);
 	}
 #if defined(DOUBLE_BUFFERING)
 	::BitBlt(Canvas->Handle, 0, 0, ClientWidth, ClientHeight, memoryHDC, 0, 0, SRCCOPY);

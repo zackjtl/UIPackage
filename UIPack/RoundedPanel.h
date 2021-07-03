@@ -66,6 +66,7 @@ protected:
 	void GetRightBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius);
 	void GetBottomBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius);
 
+	void GetRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect);
 	void GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Dia);
 	void FillRoundRect(Gdiplus::Graphics& graph,
 										 Gdiplus::Rect Rect,
