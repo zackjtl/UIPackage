@@ -380,9 +380,11 @@ void __fastcall TRoundedPanel::Paint()
 	GetViewportOrgEx(memoryHDC, &p);
 	SetViewportOrgEx(memoryHDC, p.x - this->Left, p.y - this->Top, NULL);
 	IntersectClipRect(memoryHDC, 0, 0, Parent->ClientWidth, Parent->ClientHeight);
-	Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt) PRF_CLIENT | PRF_CHILDREN);
+	Parent->Perform(WM_ERASEBKGND, (NativeUInt)memoryHDC, (NativeInt)0);
+	Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt) PRF_CLIENT);
 
 	RestoreDC(memoryHDC, saveIdx);
+
 
 #else
 	DrawParentImage(this, Canvas->Handle, true);

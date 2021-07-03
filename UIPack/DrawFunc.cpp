@@ -23,7 +23,7 @@ void DrawParentImage(TControl* Control, HDC DC, bool InvalidateParent)
 	IntersectClipRect(DC, 0, 0, Control->Parent->ClientWidth, Control->Parent->ClientHeight);
 
 	if (!Control->ComponentState.Contains(csDesigning)) {
-		////Control->Parent->Perform(WM_ERASE_BKGND, (NativeUInt)DC, (NativeInt)0);
+		Control->Parent->Perform(WM_ERASEBKGND, (NativeUInt)DC, (NativeInt)0);
 		Control->Parent->Perform(WM_PRINTCLIENT, (NativeUInt)DC, (NativeInt)PRF_CLIENT);
 	}
 	else {
