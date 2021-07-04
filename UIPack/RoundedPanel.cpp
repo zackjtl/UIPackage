@@ -31,7 +31,7 @@ __fastcall TRoundedPanel::TRoundedPanel(TComponent* Owner)
   FImagesChangeLink->OnChange = OnImageChange;
 	FLastRoundedCorner = -1;
 
-  ////this->DoubleBuffered = true;
+  this->DoubleBuffered = true;
 }
 //---------------------------------------------------------------------------
 __fastcall TRoundedPanel::~TRoundedPanel()
@@ -282,7 +282,6 @@ void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
   }
 
 	// fill
-	//Gdiplus::SolidBrush brush(BodyColor);
 	if (Gradient) {
 		Gdiplus::PathGradientBrush brush(&path);
 		brush.SetCenterColor(BodyColor);
@@ -291,12 +290,10 @@ void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
 		brush.GetCenterPoint(&cent);
 
 		// TODO: Allows to control the gradient center bias
-		//cent.X += 60;
-		//cent.Y += 80;
+		cent.X += (-Rect.X) + Rect.Width * (FShadowCenterX / 100.00);
+		cent.Y += (-Rect.Y) + Rect.Height * (FShadowCenterY / 100.0);
 
 		brush.SetCenterPoint(cent);
-
-		////BorderColor.SetValue(0x80000000 + BorderColor.GetValue());
 
 		Gdiplus::Color surroundClrs[] = {BorderColor};
 		int surroundColorCnt = 1;
@@ -347,8 +344,10 @@ void __fastcall TRoundedPanel::Paint()
 
 	int bodyX = 0;
 	int bodyY = 0;
-	int bodyWidth = ClientWidth-FShadowWidth;
-  int bodyHeight = ClientHeight-FShadowWidth;
+	int bodyWidth = ClientWidth-FShadowWidthX;
+	int bodyHeight = ClientHeight-FShadowWidthY;
+
+	bool doubleBuffering = false;
 
 	Gdiplus::Color bodyColor = ColorFromTColor(Color);
 	Gdiplus::Color borderColor = ColorFromTColor(BorderColor);
@@ -358,52 +357,57 @@ void __fastcall TRoundedPanel::Paint()
 	//shadowColorStart.SetValue(shadowColorStart.GetValue() & 0x00FFFFFF);
 	shadowColorEnd.SetValue(shadowColorEnd.GetValue() & 0x00FFFFFF);
 
-#define DOUBLE_BUFFERING 1
+	Gdiplus::Graphics* graph = NULL;
 
-#if defined(DOUBLE_BUFFERING)
-	HDC memoryHDC = CreateCompatibleDC(Canvas->Handle);
-	HBITMAP hMemoryBmp = CreateCompatibleBitmap(Canvas->Handle, Width, Height);
-	HBITMAP hOldBmp = (HBITMAP)SelectObject(memoryHDC, hMemoryBmp);
+	HDC memoryHDC;
+	HBITMAP hMemoryBmp;
+	HBITMAP hOldBmp;
 
-	// To copy the parent as background
-	////HDC wnhdc = GetWindowDC(this->Parent->Handle);
-	////BitBlt(memoryHDC, 0, 0, Width, Height, wnhdc, Left, Top, SRCCOPY);
+	if (Parent->Parent != NULL) {
+    doubleBuffering = true;
+		memoryHDC = CreateCompatibleDC(Canvas->Handle);
+		hMemoryBmp = CreateCompatibleBitmap(Canvas->Handle, Width, Height);
+		hOldBmp = (HBITMAP)SelectObject(memoryHDC, hMemoryBmp);
 
-	////DrawParentImage(this, memoryHDC, true);
+		// To copy the parent as background
+		////HDC wnhdc = GetWindowDC(this->Parent->Handle);
+		////BitBlt(memoryHDC, 0, 0, Width, Height, wnhdc, Left, Top, SRCCOPY);
 
-	// Under trying
-	Gdiplus::Graphics graph(memoryHDC);
+		////DrawParentImage(this, memoryHDC, true);
 
-	int saveIdx = SaveDC(memoryHDC);
+		// Under trying
+		graph = new Gdiplus::Graphics(memoryHDC);
 
-	TPoint p;
-	GetViewportOrgEx(memoryHDC, &p);
-	SetViewportOrgEx(memoryHDC, p.x - this->Left, p.y - this->Top, NULL);
-	IntersectClipRect(memoryHDC, 0, 0, Parent->ClientWidth, Parent->ClientHeight);
-	Parent->Perform(WM_ERASEBKGND, (NativeUInt)memoryHDC, (NativeInt)0);
-	Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt) PRF_CLIENT);
+		int saveIdx = SaveDC(memoryHDC);
+		TPoint p;
+		GetViewportOrgEx(memoryHDC, &p);
+		SetViewportOrgEx(memoryHDC, p.x - this->Left, p.y - this->Top, NULL);
+		IntersectClipRect(memoryHDC, 0, 0, Parent->ClientWidth, Parent->ClientHeight);
+		Parent->Perform(WM_ERASEBKGND, (NativeUInt)memoryHDC, (NativeInt)0);
+		Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt) PRF_CLIENT);
 
-	RestoreDC(memoryHDC, saveIdx);
-
-
-#else
-	DrawParentImage(this, Canvas->Handle, true);
-	Gdiplus::Graphics graph(Canvas->Handle);
-#endif
+		RestoreDC(memoryHDC, saveIdx);
+	}
+	else {
+		graph = new Gdiplus::Graphics(Canvas->Handle);
+  }
 
 	if (!FTransparent) {
-		if (FShadowWidth) {
-			FillRoundRect(graph, Gdiplus::Rect(FShadowWidth, FShadowWidth, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, FRadius, true);
+		if (FShadowEnabled) {
+			FillRoundRect(*graph, Gdiplus::Rect(FShadowWidthX, FShadowWidthY, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, FRadius, true);
 		}
-		FillRoundRect(graph, Gdiplus::Rect(bodyX, bodyY, bodyWidth, bodyHeight), bodyColor, borderColor, FBorderType, BorderWidth, FRadius, false);
+		FillRoundRect(*graph, Gdiplus::Rect(bodyX, bodyY, bodyWidth, bodyHeight), bodyColor, borderColor, FBorderType, BorderWidth, FRadius, false);
 	}
-#if defined(DOUBLE_BUFFERING)
-	::BitBlt(Canvas->Handle, 0, 0, ClientWidth, ClientHeight, memoryHDC, 0, 0, SRCCOPY);
+  delete graph;
 
-	SelectObject(memoryHDC, hOldBmp);
-	DeleteObject(hMemoryBmp);
-	DeleteDC(memoryHDC);
-#endif
+	if (doubleBuffering) {
+		::BitBlt(Canvas->Handle, 0, 0, ClientWidth, ClientHeight, memoryHDC, 0, 0, SRCCOPY);
+
+		SelectObject(memoryHDC, hOldBmp);
+		DeleteObject(hMemoryBmp);
+		DeleteDC(memoryHDC);
+	}
+
 
 #if 0
 	Canvas->Font->Size = 12;
@@ -553,13 +557,42 @@ void __fastcall TRoundedPanel::SetImages(TImageList* Value)
 void __fastcall TRoundedPanel::SetBorderWidth(int Value)
 {
 	FBorderWidth = Value;
-  Invalidate();
+	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetShadowWidth(int Value)
+void __fastcall TRoundedPanel::SetShadowEnabled(bool Value)
 {
-	FShadowWidth = Value;
-  Invalidate();
+	FShadowEnabled = Value;
+	Invalidate();
+}
+//---------------------------------------------------------------------------
+void __fastcall TRoundedPanel::SetShadowWidthX(int Value)
+{
+	if (Value > (Width / 2)) Value = Width / 2;
+
+	FShadowWidthX = Value;
+	Invalidate();
+}
+//---------------------------------------------------------------------------
+void __fastcall TRoundedPanel::SetShadowWidthY(int Value)
+{
+	if (Value > (Height / 2)) Value = Height / 2;
+	FShadowWidthY = Value;
+	Invalidate();
+}
+//---------------------------------------------------------------------------
+void __fastcall TRoundedPanel::SetShadowCenterX(float Value)
+{
+	if (Value > 100) Value = 100;
+	FShadowCenterX = Value;
+	Invalidate();
+}
+//---------------------------------------------------------------------------
+void __fastcall TRoundedPanel::SetShadowCenterY(float Value)
+{
+	if (Value > 100) Value = 100;
+	FShadowCenterY = Value;
+	Invalidate();
 }
 //---------------------------------------------------------------------------
 void TRoundedPanel::CheckMinSize()

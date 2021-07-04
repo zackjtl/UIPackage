@@ -42,8 +42,15 @@ private:
 	int FBodyY;
 	int FBodyWidth;
 	int FBodyHeight;
-	int FShadowWidth;
-  int FBorderWidth;
+	int FBorderWidth;
+
+  bool FShadowEnabled;
+
+	int FShadowWidthX;
+	int FShadowWidthY;
+
+	float FShadowCenterX;
+	float FShadowCenterY;
 
 	int FLastRoundedCorner;
 
@@ -95,13 +102,19 @@ public:
 	void __fastcall SetBorderType(eBorderType Value);
 	void __fastcall SetRoundedCorner(TRoundedCorner Value);
 	void __fastcall SetImages(TImageList* Value);
-  void __fastcall SetBorderWidth(int Value);
-	void __fastcall SetShadowWidth(int Value);
+	void __fastcall SetBorderWidth(int Value);
+
+  void __fastcall SetShadowEnabled(bool Value);
+
+	void __fastcall SetShadowWidthX(int Value);
+	void __fastcall SetShadowWidthY(int Value);
 
 	void __fastcall SetShadowColorStart(TColor Value);
 	void __fastcall SetShadowColorEnd(TColor Value);
 
-  void __fastcall SetTransparent(bool Value);
+	void __fastcall SetTransparent(bool Value);
+	void __fastcall SetShadowCenterX(float Value);
+	void __fastcall SetShadowCenterY(float Value);
 
 	TCanvas* __fastcall GetCanvas() {return Canvas;}
 
@@ -113,12 +126,21 @@ __published:
 	__property eBorderType BorderType = {read=FBorderType, write=SetBorderType};
 	__property TRoundedCorner RoundedCorner = {read=FRoundedCorner, write=SetRoundedCorner};
 	__property TImageList* Images = {read=FImages, write=SetImages};
-	__property int ShadowWidth = {read=FShadowWidth, write=SetShadowWidth};
+
 	__property Vcl::Controls::TBorderWidth BorderWidth = {read=FBorderWidth, write=SetBorderWidth, default=0};
 
-	__property  TColor ShadowColorStart = {read=FShadowColorStart, write=SetShadowColorStart, default=clBlack};
-	__property  TColor ShadowColorEnd = {read=FShadowColorEnd, write=SetShadowColorEnd, default=clWhite};
-  __property  bool Transparent = {read=FTransparent, write=SetTransparent, default=false};
+  __property bool Transparent = {read=FTransparent, write=SetTransparent, default=false};
+
+  __property bool ShadowEnabled = {read=FShadowEnabled, write=SetShadowEnabled, default=false};
+
+	__property TColor ShadowColorStart = {read=FShadowColorStart, write=SetShadowColorStart, default=clBlack};
+	__property TColor ShadowColorEnd = {read=FShadowColorEnd, write=SetShadowColorEnd, default=clWhite};
+
+	__property int ShadowWidthX = {read=FShadowWidthX, write=SetShadowWidthX};
+	__property int ShadowWidthY = {read=FShadowWidthY, write=SetShadowWidthY};
+
+	__property float ShadowCenterX = {read=FShadowCenterX, write=SetShadowCenterX, default=0};
+  __property float ShadowCenterY = {read=FShadowCenterY, write=SetShadowCenterY, default=0};
 
 };
 //---------------------------------------------------------------------------
