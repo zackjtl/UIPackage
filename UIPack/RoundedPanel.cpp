@@ -147,9 +147,6 @@ void TRoundedPanel::GetRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect)
 void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Dia)
 {
 	// diameter can't exceed width or height
-	if(Dia > Rect.Width) Dia = Rect.Width;
-	if(Dia > Rect.Height) Dia = Rect.Height;
-
 	// define a corner
 	Gdiplus::Rect corner(Rect.X, Rect.Y, Dia, Dia);
 
@@ -160,6 +157,8 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 	Gdiplus::Point r_t(Rect.X + Rect.Width - 1, Rect.Y);
 	Gdiplus::Point r_b(r_t.X, Rect.Y + Rect.Height - 1);
 	Gdiplus::Point l_b(l_t.X, r_b.Y);
+
+	int lineLen = Rect.Width > Rect.Height ? Rect.Height / 4 : Rect.Width / 4;
 
 	// top left
 
@@ -187,30 +186,28 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 		Path->AddArc(corner, 270, 90);
 	}
 	else {
-		Path->AddLine(PointFrom(r_t, -Dia, 0), r_t);
-		Path->AddLine(r_t, PointFrom(r_t, 0, Dia));
+		Path->AddLine(PointFrom(r_t, -lineLen, 0), r_t);
+		Path->AddLine(r_t, PointFrom(r_t, 0, lineLen));
 	}
 
-	// bottom right
 	corner.Y += (Rect.Height - Dia - 1);
-
+	// bottom right
 	if (FRoundedCorner.Contains(eRC::RB)) {
 		Path->AddArc(corner,   0, 90);
 	}
 	else {
-		Path->AddLine(PointFrom(r_b, 0, -Dia), r_b);
-		Path->AddLine(r_b, PointFrom(r_b, -Dia, 0));
+		Path->AddLine(PointFrom(r_b, 0, -lineLen), r_b);
+		Path->AddLine(r_b, PointFrom(r_b, -lineLen, 0));
 	}
 
-	// bottom left
 	corner.X -= (Rect.Width - Dia - 1);
-
+	// bottom left
 	if (FRoundedCorner.Contains(eRC::LB)) {
 		Path->AddArc(corner,  90, 90);
 	}
 	else {
-		Path->AddLine(PointFrom(l_b, -Dia, 0), l_b);
-		Path->AddLine(l_b, PointFrom(l_b, 0, -Dia));
+		Path->AddLine(PointFrom(l_b, -lineLen, 0), l_b);
+		Path->AddLine(l_b, PointFrom(l_b, 0, -lineLen));
 	}
 
 	// end path
@@ -315,8 +312,6 @@ void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
 //---------------------------------------------------------------------------
 void __fastcall TRoundedPanel::Paint()
 {
-	int bias = Radius == 0 ? 1 : 0;
-
 	if (!FShadowEnabled) {
 		FShadowWidthX = 0;
 		FShadowWidthY = 0;
@@ -326,6 +321,13 @@ void __fastcall TRoundedPanel::Paint()
 	int bodyY = 0;
 	int bodyWidth = ClientWidth-FShadowWidthX;
 	int bodyHeight = ClientHeight-FShadowWidthY;
+
+	int trueRadius = FRadius;
+
+	if (trueRadius > (bodyWidth / 2)) trueRadius = bodyWidth / 2;
+	if (trueRadius > (bodyHeight / 2)) trueRadius = bodyHeight / 2;
+
+	int bias = trueRadius == 0 ? 1 : 0;
 
 	bool doubleBuffering = false;
 
@@ -374,9 +376,9 @@ void __fastcall TRoundedPanel::Paint()
 #endif
 	if (!FTransparent) {
 		if (FShadowEnabled) {
-			FillRoundRect(*graph, Gdiplus::Rect(FShadowWidthX, FShadowWidthY, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, FRadius, true);
+			FillRoundRect(*graph, Gdiplus::Rect(FShadowWidthX, FShadowWidthY, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, trueRadius, true);
 		}
-		FillRoundRect(*graph, Gdiplus::Rect(bodyX, bodyY, bodyWidth, bodyHeight), bodyColor, borderColor, FBorderType, BorderWidth, FRadius, false);
+		FillRoundRect(*graph, Gdiplus::Rect(bodyX, bodyY, bodyWidth, bodyHeight), bodyColor, borderColor, FBorderType, BorderWidth, trueRadius, false);
 	}
 	////delete graph;
 	if (doubleBuffering) {
@@ -404,16 +406,6 @@ void __fastcall TRoundedPanel::Paint()
 	////if (FPicture != NULL)
 		////Canvas->Draw(0, 0, (TGraphic*)FPicture->Graphic);
 #endif
-}
-//---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::DrawBound(int x1, int y1, int x2, int y2)
-{
-	if (FRadius == 0) {
-		Canvas->Rectangle(x1, y1, x2+1, y2+1);
-	}
-	else {
-		Canvas->RoundRect(x1, y1, x2, y2, FRadius, FRadius);
-	}
 }
 //---------------------------------------------------------------------------
 void __fastcall TRoundedPanel::SetColor(TColor Value)
@@ -448,7 +440,6 @@ void __fastcall TRoundedPanel::SetTransparent(bool Value)
 //---------------------------------------------------------------------------
 void __fastcall TRoundedPanel::SetRadius(unsigned int Radius)
 {
-
 	FRadius = Radius;
 	/*
 	HRGN rgn;

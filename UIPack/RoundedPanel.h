@@ -64,7 +64,6 @@ protected:
 	void __fastcall PanelResize(TObject *Sender);
 	void __fastcall OnImageChange(TObject *Sender);
 	void __fastcall ConstrainedResize(int &MinWidth, int &MinHeight, int &MaxWidth, int &MaxHeight);
-	void __fastcall DrawBound(int x1, int y1, int x2, int y2);
 
 	void __fastcall DrawImageByIndex(int Index, int x, int y);
 

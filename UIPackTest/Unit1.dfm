@@ -14,44 +14,16 @@ object Form1: TForm1
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 12
-  object RoundedPanel1: TRoundedPanel
-    Left = 80
-    Top = 128
-    Width = 569
-    Height = 369
-    BorderColor = clGray
-    Color = clGreen
-    Radius = 20
-    RoundedCorner = [LT, RT, LB, RB]
-    ShadowEnabled = True
-    ShadowColorEnd = clBlack
-    ShadowWidthX = 20
-    ShadowWidthY = 20
-    object RoundedPanel2: TRoundedPanel
-      Left = 80
-      Top = 56
-      Width = 385
-      Height = 73
-      BorderColor = clGray
-      Color = clMaroon
-      Radius = 30
-      RoundedCorner = [LT, RB]
-      ShadowEnabled = True
-      ShadowColorEnd = clBlack
-      ShadowWidthX = 20
-      ShadowWidthY = 20
-    end
-  end
   object Panel1: TPanel
     Left = 655
     Top = 160
     Width = 385
     Height = 305
     Caption = 'Panel1'
-    TabOrder = 1
+    TabOrder = 0
     object RoundedPanel3: TRoundedPanel
-      Left = 80
-      Top = 68
+      Left = 56
+      Top = 52
       Width = 265
       Height = 137
       BorderColor = clGray
@@ -62,5 +34,19 @@ object Form1: TForm1
       ShadowWidthX = 20
       ShadowWidthY = 20
     end
+  end
+  object RoundedPanel2: TRoundedPanel
+    Left = 264
+    Top = 84
+    Width = 265
+    Height = 189
+    BorderColor = clGray
+    Color = clSkyBlue
+    Radius = 20
+    RoundedCorner = [RT, LB]
+    ShadowEnabled = True
+    ShadowColorEnd = clBlack
+    ShadowWidthX = 9
+    ShadowWidthY = 9
   end
 end
