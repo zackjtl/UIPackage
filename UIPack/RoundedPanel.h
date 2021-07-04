@@ -86,12 +86,6 @@ protected:
 
 	void CheckMinSize();
 
-	void __fastcall OnWmEraseBackground(TMessage& Msg);
-
-	BEGIN_MESSAGE_MAP
-	MESSAGE_HANDLER(WM_ERASE_BKGND, TMessage, OnWmEraseBackground)
-	END_MESSAGE_MAP(TCustomPanel)
-
 public:
 	__fastcall TRoundedPanel(TComponent* Owner);
 	__fastcall ~TRoundedPanel();

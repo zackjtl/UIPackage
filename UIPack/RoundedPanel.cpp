@@ -46,31 +46,6 @@ Gdiplus::Color ColorFromTColor(TColor Val)
 	return color;
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::OnWmEraseBackground(TMessage& Msg)
-{
-	if (FTransparent) {
-		if (Parent != NULL && Parent->DoubleBuffered) {
-
-    }
-  }
-
-#if 0
-  if FTransparent and PaintClientArea then
-  begin
-    if ( Parent <> nil ) and Parent.DoubleBuffered then
-      PerformEraseBackground( Self, Msg.DC );
-    DrawParentImage( Self, Msg.DC, True );
-
-    // Do not call inherited -- prevents TWinControl.WMEraseBkgnd from
-    // erasing background. Set Msg.Result to 1 to indicate background is painted
-    // by the control.
-    Msg.Result := 1;
-  end
-  else
-    inherited;
-#endif
-}
-//---------------------------------------------------------------------------
 #define PointFrom(P, ShiftX, ShiftY) Gdiplus::Point(P.X + ShiftX, P.Y + ShiftY)
 //---------------------------------------------------------------------------
 void TRoundedPanel::GetTopBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
@@ -342,6 +317,11 @@ void __fastcall TRoundedPanel::Paint()
 {
 	int bias = Radius == 0 ? 1 : 0;
 
+	if (!FShadowEnabled) {
+		FShadowWidthX = 0;
+		FShadowWidthY = 0;
+  }
+
 	int bodyX = 0;
 	int bodyY = 0;
 	int bodyWidth = ClientWidth-FShadowWidthX;
@@ -354,7 +334,6 @@ void __fastcall TRoundedPanel::Paint()
 	Gdiplus::Color shadowColorStart = ColorFromTColor(FShadowColorStart);
 	Gdiplus::Color shadowColorEnd = ColorFromTColor(FShadowColorEnd);
 
-	//shadowColorStart.SetValue(shadowColorStart.GetValue() & 0x00FFFFFF);
 	shadowColorEnd.SetValue(shadowColorEnd.GetValue() & 0x00FFFFFF);
 
 	Gdiplus::Graphics* graph = NULL;
@@ -362,8 +341,9 @@ void __fastcall TRoundedPanel::Paint()
 	HDC memoryHDC;
 	HBITMAP hMemoryBmp;
 	HBITMAP hOldBmp;
-
-	if (Parent->Parent != NULL) {
+#if 1
+	if ((Parent != Owner)) {
+	//if (false) {
     doubleBuffering = true;
 		memoryHDC = CreateCompatibleDC(Canvas->Handle);
 		hMemoryBmp = CreateCompatibleBitmap(Canvas->Handle, Width, Height);
@@ -390,16 +370,15 @@ void __fastcall TRoundedPanel::Paint()
 	}
 	else {
 		graph = new Gdiplus::Graphics(Canvas->Handle);
-  }
-
+	}
+#endif
 	if (!FTransparent) {
 		if (FShadowEnabled) {
 			FillRoundRect(*graph, Gdiplus::Rect(FShadowWidthX, FShadowWidthY, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, FRadius, true);
 		}
 		FillRoundRect(*graph, Gdiplus::Rect(bodyX, bodyY, bodyWidth, bodyHeight), bodyColor, borderColor, FBorderType, BorderWidth, FRadius, false);
 	}
-  delete graph;
-
+	////delete graph;
 	if (doubleBuffering) {
 		::BitBlt(Canvas->Handle, 0, 0, ClientWidth, ClientHeight, memoryHDC, 0, 0, SRCCOPY);
 
@@ -407,7 +386,6 @@ void __fastcall TRoundedPanel::Paint()
 		DeleteObject(hMemoryBmp);
 		DeleteDC(memoryHDC);
 	}
-
 
 #if 0
 	Canvas->Font->Size = 12;
