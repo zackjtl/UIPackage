@@ -22,21 +22,42 @@ static inline void ValidCtrCheck(TRoundedPanel *)
 __fastcall TRoundedPanel::TRoundedPanel(TComponent* Owner)
 	: TCustomPanel(Owner)
 {
-  GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
 	this->OnResize = PanelResize;
 	FBorderColor = clGray;
 	FRoundedCorner << eRC::LT << eRC::RT << eRC::LB << eRC::RB;
-  FImagesChangeLink = new TChangeLink();
-  FImagesChangeLink->OnChange = OnImageChange;
+	FImagesChangeLink = new TChangeLink();
+	FImagesChangeLink->OnChange = OnImageChange;
 	FLastRoundedCorner = -1;
 
-  this->DoubleBuffered = true;
+	FImage = new TPngImageEx();
+	PngDrawer = new TPngDrawer();
+
+  PngDrawer->OnDoRepaint = DoRepaint;
+
+	this->DoubleBuffered = true;
 }
 //---------------------------------------------------------------------------
 __fastcall TRoundedPanel::~TRoundedPanel()
 {
 	FImagesChangeLink->Free();
+}
+//---------------------------------------------------------------------------
+void __fastcall TRoundedPanel::Loaded()
+{
+	if (FImage != NULL)
+		PngDrawer->SetImage((TPngImage*)FImage);
+}
+//---------------------------------------------------------------------------
+void __fastcall TRoundedPanel::DoRepaint(TObject* Obj)
+{
+  Invalidate();
+}
+//---------------------------------------------------------------------------
+void __fastcall TRoundedPanel::OnPictureChange(TObject* Obj)
+{
+  PngDrawer->SetImage(FImage);
 }
 //---------------------------------------------------------------------------
 Gdiplus::Color ColorFromTColor(TColor Val)
@@ -575,6 +596,12 @@ void TRoundedPanel::CheckMinSize()
 void __fastcall TRoundedPanel::ConstrainedResize(int &MinWidth, int &MinHeight, int &MaxWidth, int &MaxHeight)
 {
 	//SetRadius(FRadius);
+}
+//---------------------------------------------------------------------------
+void __fastcall TRoundedPanel::SetImage(TPngImage* Image)
+{
+	FImage->Assign(Image);
+  PngDrawer->SetImage(FImage);
 }
 //---------------------------------------------------------------------------
 namespace Roundedpanel

@@ -9,6 +9,8 @@
 #include <Vcl.Imaging.pngimage.hpp>
 #include <Gdiplus.h>
 #include "UserMsgs.h"
+#include "PngImageEx.h"
+#include "PngDrawer.h"
 using namespace Gdiplus;
 //---------------------------------------------------------------------------
 enum eBorderType {
@@ -37,6 +39,7 @@ private:
 	TChangeLink* FImagesChangeLink;
 	TColor FShadowColorStart;
 	TColor FShadowColorEnd;
+	TPngImage* FImage;
 
 	int FBodyX;
 	int FBodyY;
@@ -59,6 +62,8 @@ private:
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	ULONG_PTR  gdiplusToken;
 
+  TPngDrawer*  PngDrawer;
+
 protected:
 	void __fastcall Paint();
 	void __fastcall PanelResize(TObject *Sender);
@@ -66,6 +71,7 @@ protected:
 	void __fastcall ConstrainedResize(int &MinWidth, int &MinHeight, int &MaxWidth, int &MaxHeight);
 
 	void __fastcall DrawImageByIndex(int Index, int x, int y);
+  void __fastcall Loaded();
 
 	void GetTopBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius);
 	void GetLeftBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius);
@@ -108,6 +114,11 @@ public:
 	void __fastcall SetTransparent(bool Value);
 	void __fastcall SetShadowCenterX(float Value);
 	void __fastcall SetShadowCenterY(float Value);
+	void __fastcall SetImage(TPngImage* Image);
+
+  // Notify Event Functions
+	void __fastcall DoRepaint(TObject* Obj);
+	void __fastcall OnPictureChange(TObject* Obj);
 
 	TCanvas* __fastcall GetCanvas() {return Canvas;}
 
@@ -133,7 +144,9 @@ __published:
 	__property int ShadowWidthY = {read=FShadowWidthY, write=SetShadowWidthY};
 
 	__property float ShadowCenterX = {read=FShadowCenterX, write=SetShadowCenterX, default=0};
-  __property float ShadowCenterY = {read=FShadowCenterY, write=SetShadowCenterY, default=0};
+	__property float ShadowCenterY = {read=FShadowCenterY, write=SetShadowCenterY, default=0};
+
+  __property TPngImage* Image = {read=FImage, write=SetImage};
 
 };
 //---------------------------------------------------------------------------
