@@ -123,6 +123,10 @@
             <DependentOn>DrawFunc.h</DependentOn>
             <BuildOrder>5</BuildOrder>
         </CppCompile>
+        <CppCompile Include="FlatPanel.cpp">
+            <DependentOn>FlatPanel.h</DependentOn>
+            <BuildOrder>6</BuildOrder>
+        </CppCompile>
         <CppCompile Include="PngDrawer.cpp">
             <DependentOn>PngDrawer.h</DependentOn>
             <BuildOrder>8</BuildOrder>
@@ -130,10 +134,6 @@
         <CppCompile Include="PngImageEx.cpp">
             <DependentOn>PngImageEx.h</DependentOn>
             <BuildOrder>7</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="RoundedPanel.cpp">
-            <DependentOn>RoundedPanel.h</DependentOn>
-            <BuildOrder>6</BuildOrder>
         </CppCompile>
         <PackageImport Include="rtl.bpi">
             <BuildOrder>1</BuildOrder>

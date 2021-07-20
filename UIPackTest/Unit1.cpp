@@ -6,7 +6,8 @@
 #include "Unit1.h"
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
-#pragma link "RoundedPanel"
+#pragma link "FlatPanel"
+#pragma link "FlatPanel"
 #pragma resource "*.dfm"
 TForm1 *Form1;
 //---------------------------------------------------------------------------

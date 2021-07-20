@@ -27,8 +27,8 @@
     <Transaction>2021/06/02 13:46:52.000.484,C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\Button1.cpp=</Transaction>
     <Transaction>2021/06/02 13:47:10.000.198,C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\FuckPanel.cpp=</Transaction>
     <Transaction>2021/06/02 15:23:42.000.990,=C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\Unit1.cpp</Transaction>
-    <Transaction>2021/06/02 15:23:56.000.586,C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\RoundedButton.h=C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\Unit1.h</Transaction>
     <Transaction>2021/06/02 15:23:56.000.586,C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\RoundedButton.cpp=C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\Unit1.cpp</Transaction>
+    <Transaction>2021/06/02 15:23:56.000.586,C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\RoundedButton.h=C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\Unit1.h</Transaction>
     <Transaction>2021/06/02 15:24:01.000.117,C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\RoundedButton.cpp=</Transaction>
     <Transaction>2021/06/02 15:24:46.000.470,=C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\RoundedButton.cpp</Transaction>
     <Transaction>2021/06/02 15:42:56.000.231,C:\Users\d8932\OneDrive\文件\Embarcadero\Studio\Projects\Package1\RoundedButton.cpp=</Transaction>
@@ -48,25 +48,27 @@
     <Transaction>2021/07/07 17:36:03.000.574,D:\Projects\UIPackage\UIPack\FixPngImage.cpp=D:\Projects\UIPackage\UIPack\PngImageEx.cpp</Transaction>
     <Transaction>2021/07/07 17:36:03.000.574,D:\Projects\UIPackage\UIPack\FixPngImage.h=D:\Projects\UIPackage\UIPack\PngImageEx.h</Transaction>
     <Transaction>2021/07/07 17:52:14.000.028,=D:\Projects\UIPackage\UIPack\Unit2.cpp</Transaction>
-    <Transaction>2021/07/07 17:52:21.000.497,D:\Projects\UIPackage\UIPack\Unit2.h=D:\Projects\UIPackage\UIPack\PngDrawer.h</Transaction>
     <Transaction>2021/07/07 17:52:21.000.497,D:\Projects\UIPackage\UIPack\Unit2.cpp=D:\Projects\UIPackage\UIPack\PngDrawer.cpp</Transaction>
+    <Transaction>2021/07/07 17:52:21.000.497,D:\Projects\UIPackage\UIPack\Unit2.h=D:\Projects\UIPackage\UIPack\PngDrawer.h</Transaction>
+    <Transaction>2021/07/20 13:21:33.773,D:\Projects\UIPackage\UIPack\FlatPanel.cpp=D:\Projects\UIPackage\UIPack\RoundedPanel.cpp</Transaction>
+    <Transaction>2021/07/20 13:21:33.773,D:\Projects\UIPackage\UIPack\FlatPanel.h=D:\Projects\UIPackage\UIPack\RoundedPanel.h</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="DrawFunc.cpp"/>
     <File Path="DrawFunc.cpp"/>
     <File Path="DrawFunc.h"/>
-    <File Path="PngImageEx.cpp"/>
-    <File Path="PngImageEx.cpp"/>
-    <File Path="PngImageEx.h"/>
-    <File Path="RoundedPanel.cpp"/>
-    <File Path="RoundedPanel.cpp"/>
-    <File Path="RoundedPanel.h"/>
-    <File Path="UIPackage.cpp"/>
-    <File Path="UIPackagePCH1.h"/>
-    <File Path="UserMsgs.h"/>
+    <File Path="FlatPanel.cpp"/>
+    <File Path="FlatPanel.cpp"/>
+    <File Path="FlatPanel.h"/>
     <File Path="PngDrawer.cpp"/>
     <File Path="PngDrawer.cpp"/>
     <File Path="PngDrawer.h"/>
+    <File Path="PngImageEx.cpp"/>
+    <File Path="PngImageEx.cpp"/>
+    <File Path="PngImageEx.h"/>
+    <File Path="UIPackage.cpp"/>
+    <File Path="UIPackagePCH1.h"/>
+    <File Path="UserMsgs.h"/>
     <File Path="rtl.bpi"/>
     <File Path="vcl.bpi"/>
   </ProjectSortOrder>

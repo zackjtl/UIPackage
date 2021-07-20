@@ -29,4 +29,6 @@ __published:
 
 };
 //---------------------------------------------------------------------------
+void PngImageAssignToBitmap(TBitmap* Bitmap, TPngImage* PngImage, bool Premultiplied=true);
+//---------------------------------------------------------------------------
 #endif

@@ -4,7 +4,7 @@
 
 #pragma hdrstop
 
-#include "RoundedPanel.h"
+#include "FlatPanel.h"
 #include "DrawFunc.h"
 #include <Vcl.Buttons.hpp>
 #pragma package(smart_init)
@@ -14,12 +14,12 @@ using namespace Gdiplus;
 // any pure virtual functions.
 //
 
-static inline void ValidCtrCheck(TRoundedPanel *)
+static inline void ValidCtrCheck(TFlatPanel *)
 {
-	new TRoundedPanel(NULL);
+	new TFlatPanel(NULL);
 }
 //---------------------------------------------------------------------------
-__fastcall TRoundedPanel::TRoundedPanel(TComponent* Owner)
+__fastcall TFlatPanel::TFlatPanel(TComponent* Owner)
 	: TCustomPanel(Owner)
 {
 	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
@@ -34,28 +34,30 @@ __fastcall TRoundedPanel::TRoundedPanel(TComponent* Owner)
 	FImage = new TPngImageEx();
 	PngDrawer = new TPngDrawer();
 
+  FImage->OnChange = OnPictureChange;
+
   PngDrawer->OnDoRepaint = DoRepaint;
 
 	this->DoubleBuffered = true;
 }
 //---------------------------------------------------------------------------
-__fastcall TRoundedPanel::~TRoundedPanel()
+__fastcall TFlatPanel::~TFlatPanel()
 {
 	FImagesChangeLink->Free();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::Loaded()
+void __fastcall TFlatPanel::Loaded()
 {
 	if (FImage != NULL)
 		PngDrawer->SetImage((TPngImage*)FImage);
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::DoRepaint(TObject* Obj)
+void __fastcall TFlatPanel::DoRepaint(TObject* Obj)
 {
   Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::OnPictureChange(TObject* Obj)
+void __fastcall TFlatPanel::OnPictureChange(TObject* Obj)
 {
   PngDrawer->SetImage(FImage);
 }
@@ -69,7 +71,7 @@ Gdiplus::Color ColorFromTColor(TColor Val)
 //---------------------------------------------------------------------------
 #define PointFrom(P, ShiftX, ShiftY) Gdiplus::Point(P.X + ShiftX, P.Y + ShiftY)
 //---------------------------------------------------------------------------
-void TRoundedPanel::GetTopBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
+void TFlatPanel::GetTopBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
 {
 	// diameter can't exceed width or height
 	if(Radius > Rect.Width) return;
@@ -90,7 +92,7 @@ void TRoundedPanel::GetTopBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect R
 	Path->CloseFigure();
 }
 //---------------------------------------------------------------------------
-void TRoundedPanel::GetLeftBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
+void TFlatPanel::GetLeftBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
 {
 	// diameter can't exceed width or height
 	if(Radius > Rect.Height) return;
@@ -108,7 +110,7 @@ void TRoundedPanel::GetLeftBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 	Path->CloseFigure();
 }
 //---------------------------------------------------------------------------
-void TRoundedPanel::GetRightBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
+void TFlatPanel::GetRightBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
 {
 	// diameter can't exceed width or height
 	if(Radius > Rect.Height) return;
@@ -126,7 +128,7 @@ void TRoundedPanel::GetRightBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect
 	Path->CloseFigure();
 }
 //---------------------------------------------------------------------------
-void TRoundedPanel::GetBottomBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
+void TFlatPanel::GetBottomBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
 {
 	// diameter can't exceed width or height
 	if(Radius > Rect.Width) return;
@@ -147,7 +149,7 @@ void TRoundedPanel::GetBottomBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rec
 	Path->CloseFigure();
 }
 //---------------------------------------------------------------------------
-void TRoundedPanel::GetRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect)
+void TFlatPanel::GetRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect)
 {
 	// begin path
 	Path->Reset();
@@ -165,7 +167,7 @@ void TRoundedPanel::GetRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect)
 	Path->CloseFigure();
 }
 //---------------------------------------------------------------------------
-void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Dia)
+void TFlatPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Dia)
 {
 	// diameter can't exceed width or height
 	// define a corner
@@ -235,7 +237,7 @@ void TRoundedPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect 
 	Path->CloseFigure();
 }
 //---------------------------------------------------------------------------
-void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
+void TFlatPanel::FillRoundRect(Gdiplus::Graphics& graph,
 																	Gdiplus::Rect Rect,
 																	Gdiplus::Color BodyColor,
 																	Gdiplus::Color BorderColor,
@@ -331,7 +333,7 @@ void TRoundedPanel::FillRoundRect(Gdiplus::Graphics& graph,
 	graph.SetPageUnit((Unit)oldPageUnit);
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::Paint()
+void __fastcall TFlatPanel::Paint()
 {
 	if (!FShadowEnabled) {
 		FShadowWidthX = 0;
@@ -429,37 +431,37 @@ void __fastcall TRoundedPanel::Paint()
 #endif
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetColor(TColor Value)
+void __fastcall TFlatPanel::SetColor(TColor Value)
 {
 	FColor = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetBorderColor(TColor Value)
+void __fastcall TFlatPanel::SetBorderColor(TColor Value)
 {
 	FBorderColor = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetShadowColorStart(TColor Value)
+void __fastcall TFlatPanel::SetShadowColorStart(TColor Value)
 {
 	FShadowColorStart = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetShadowColorEnd(TColor Value)
+void __fastcall TFlatPanel::SetShadowColorEnd(TColor Value)
 {
 	FShadowColorEnd = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetTransparent(bool Value)
+void __fastcall TFlatPanel::SetTransparent(bool Value)
 {
 	FTransparent = Value;
   Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetRadius(unsigned int Radius)
+void __fastcall TFlatPanel::SetRadius(unsigned int Radius)
 {
 	FRadius = Radius;
 	/*
@@ -497,24 +499,24 @@ void __fastcall TRoundedPanel::SetRadius(unsigned int Radius)
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetBorderType(eBorderType Value)
+void __fastcall TFlatPanel::SetBorderType(eBorderType Value)
 {
 	FBorderType = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetRoundedCorner(TRoundedCorner Value)
+void __fastcall TFlatPanel::SetRoundedCorner(TRoundedCorner Value)
 {
 	FRoundedCorner = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::PanelResize(TObject *Sender)
+void __fastcall TFlatPanel::PanelResize(TObject *Sender)
 {
 	SetRadius(FRadius);
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::DrawImageByIndex(int Index, int x, int y)
+void __fastcall TFlatPanel::DrawImageByIndex(int Index, int x, int y)
 {
   if (FImages == NULL) return;
 	if (FImages->Count > Index) {
@@ -522,14 +524,14 @@ void __fastcall TRoundedPanel::DrawImageByIndex(int Index, int x, int y)
 	}
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::OnImageChange(TObject *Sender)
+void __fastcall TFlatPanel::OnImageChange(TObject *Sender)
 {
 	CheckMinSize();
 	//DrawImageByIndex(0, 0, 0);
   Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetImages(TImageList* Value)
+void __fastcall TFlatPanel::SetImages(TImageList* Value)
 {
 	if (FImages != NULL) {
 		FImages->UnRegisterChanges(FImagesChangeLink);
@@ -544,19 +546,19 @@ void __fastcall TRoundedPanel::SetImages(TImageList* Value)
   Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetBorderWidth(int Value)
+void __fastcall TFlatPanel::SetBorderWidth(int Value)
 {
 	FBorderWidth = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetShadowEnabled(bool Value)
+void __fastcall TFlatPanel::SetShadowEnabled(bool Value)
 {
 	FShadowEnabled = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetShadowWidthX(int Value)
+void __fastcall TFlatPanel::SetShadowWidthX(int Value)
 {
 	if (Value > (Width / 2)) Value = Width / 2;
 
@@ -564,28 +566,28 @@ void __fastcall TRoundedPanel::SetShadowWidthX(int Value)
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetShadowWidthY(int Value)
+void __fastcall TFlatPanel::SetShadowWidthY(int Value)
 {
 	if (Value > (Height / 2)) Value = Height / 2;
 	FShadowWidthY = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetShadowCenterX(float Value)
+void __fastcall TFlatPanel::SetShadowCenterX(float Value)
 {
 	if (Value > 100) Value = 100;
 	FShadowCenterX = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetShadowCenterY(float Value)
+void __fastcall TFlatPanel::SetShadowCenterY(float Value)
 {
 	if (Value > 100) Value = 100;
 	FShadowCenterY = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void TRoundedPanel::CheckMinSize()
+void TFlatPanel::CheckMinSize()
 {
 	if (FImages->Width > Width)
 		Width = FImages->Width;
@@ -593,22 +595,22 @@ void TRoundedPanel::CheckMinSize()
     Height = FImages->Height;
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::ConstrainedResize(int &MinWidth, int &MinHeight, int &MaxWidth, int &MaxHeight)
+void __fastcall TFlatPanel::ConstrainedResize(int &MinWidth, int &MinHeight, int &MaxWidth, int &MaxHeight)
 {
 	//SetRadius(FRadius);
 }
 //---------------------------------------------------------------------------
-void __fastcall TRoundedPanel::SetImage(TPngImage* Image)
+void __fastcall TFlatPanel::SetImage(TPngImage* Image)
 {
 	FImage->Assign(Image);
   PngDrawer->SetImage(FImage);
 }
 //---------------------------------------------------------------------------
-namespace Roundedpanel
+namespace Flatpanel
 {
 	void __fastcall PACKAGE Register()
 	{
-		TComponentClass classes[1] = {__classid(TRoundedPanel)};
+		TComponentClass classes[1] = {__classid(TFlatPanel)};
 		RegisterComponents(L"UI Set", classes, 0);
 	}
 }

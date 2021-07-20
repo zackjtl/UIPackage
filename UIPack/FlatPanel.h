@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
-#ifndef RoundedPanelH
-#define RoundedPanelH
+#ifndef FlatPanelH
+#define FlatPanelH
 //---------------------------------------------------------------------------
 #include <System.SysUtils.hpp>
 #include <System.Classes.hpp>
@@ -27,7 +27,7 @@ enum eBorderType {
 enum eRC : bool { LT, RT, LB, RB };
 typedef System::Set<eRC, eRC::LT, eRC::RB> TRoundedCorner;
 //---------------------------------------------------------------------------
-class PACKAGE TRoundedPanel : public TCustomPanel
+class PACKAGE TFlatPanel : public TCustomPanel
 {
 private:
 	TColor FColor;
@@ -92,8 +92,8 @@ protected:
 	void CheckMinSize();
 
 public:
-	__fastcall TRoundedPanel(TComponent* Owner);
-	__fastcall ~TRoundedPanel();
+	__fastcall TFlatPanel(TComponent* Owner);
+	__fastcall ~TFlatPanel();
 
 	void __fastcall SetBorderColor(TColor Value);
 	void __fastcall SetColor(TColor Value);
