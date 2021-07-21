@@ -27,15 +27,14 @@ __fastcall TFlatPanel::TFlatPanel(TComponent* Owner)
 	this->OnResize = PanelResize;
 	FBorderColor = clGray;
 	FRoundedCorner << eRC::LT << eRC::RT << eRC::LB << eRC::RB;
-	FImagesChangeLink = new TChangeLink();
-	FImagesChangeLink->OnChange = OnImageChange;
+	////FImagesChangeLink = new TChangeLink();
+	////FImagesChangeLink->OnChange = OnImageChange;
 	FLastRoundedCorner = -1;
 
-	FImage = new TPngImageEx();
+	FImage = new TPngImage();
 	PngDrawer = new TPngDrawer();
 
   FImage->OnChange = OnPictureChange;
-
   PngDrawer->OnDoRepaint = DoRepaint;
 
 	this->DoubleBuffered = true;
@@ -43,13 +42,13 @@ __fastcall TFlatPanel::TFlatPanel(TComponent* Owner)
 //---------------------------------------------------------------------------
 __fastcall TFlatPanel::~TFlatPanel()
 {
-	FImagesChangeLink->Free();
+	////FImagesChangeLink->Free();
 }
 //---------------------------------------------------------------------------
 void __fastcall TFlatPanel::Loaded()
 {
-	if (FImage != NULL)
-		PngDrawer->SetImage((TPngImage*)FImage);
+	////if (FImage != NULL)
+		////PngDrawer->AssignImage((TPngImage*)FImage);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFlatPanel::DoRepaint(TObject* Obj)
@@ -59,7 +58,13 @@ void __fastcall TFlatPanel::DoRepaint(TObject* Obj)
 //---------------------------------------------------------------------------
 void __fastcall TFlatPanel::OnPictureChange(TObject* Obj)
 {
-  PngDrawer->SetImage(FImage);
+	////PngDrawer->AssignImage(FImage);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFlatPanel::SetImage(TPngImage* Image)
+{
+	FImage->Assign(Image);
+	////PngDrawer->AssignImage(FImage);
 }
 //---------------------------------------------------------------------------
 Gdiplus::Color ColorFromTColor(TColor Val)
@@ -274,11 +279,12 @@ void TFlatPanel::FillRoundRect(Gdiplus::Graphics& graph,
 	}
 	else {
     GetRectPath(&path, Rect);
-  }
+	}
 
 	// fill
 	if (Gradient) {
 		Gdiplus::PathGradientBrush brush(&path);
+
 		brush.SetCenterColor(BodyColor);
 
 		Gdiplus::PointF cent;
@@ -298,8 +304,47 @@ void TFlatPanel::FillRoundRect(Gdiplus::Graphics& graph,
 		graph.FillPath(&brush, &path);
 	}
 	else {
-		Gdiplus::SolidBrush brush(BodyColor);
-		graph.FillPath(&brush, &path);
+    Gdiplus::Brush* brush = NULL;
+
+		if (FImage != NULL) {
+			Gdiplus::Bitmap img(FImage->Width, FImage->Height, PixelFormat32bppARGB);
+
+			if (false /*PngImageAssignToGdipBitmap(&img, FImage)*/) {
+				brush = new Gdiplus::TextureBrush(&img);
+			}
+			else {
+        brush = new Gdiplus::SolidBrush(BodyColor);
+      }
+		}
+		else {
+			brush = new Gdiplus::SolidBrush(BodyColor);
+    }
+
+		graph.FillPath(brush, &path);
+
+		if (!Gradient) {
+      // Draw image at the center
+			Gdiplus::Rect imgRect;
+
+			if (FImage->Width < Rect.Width)
+				imgRect.X = Rect.X + (Rect.Width - FImage->Width) / 2;
+			else
+				imgRect.X = Rect.X;
+
+			if (FImage->Height < Rect.Height)
+				imgRect.Y = Rect.Y + (Rect.Height - FImage->Height) / 2;
+			else
+				imgRect.Y = Rect.Y;
+
+			imgRect.Width = FImage->Width;
+			imgRect.Height = FImage->Height;
+
+			Gdiplus::Bitmap img(FImage->Width, FImage->Height, PixelFormat32bppARGB);
+			PngImageAssignToGdipBitmap(&img, FImage);
+			graph.DrawImage(&img, imgRect);
+    }
+
+    delete brush;
 	}
 
 	// draw the border last so it will be on top
@@ -368,7 +413,7 @@ void __fastcall TFlatPanel::Paint()
 	HBITMAP hOldBmp;
 #if 1
 	if ((Parent != Owner)) {
-	//if (false) {
+    // Parent is the another component
     doubleBuffering = true;
 		memoryHDC = CreateCompatibleDC(Canvas->Handle);
 		hMemoryBmp = CreateCompatibleBitmap(Canvas->Handle, Width, Height);
@@ -391,9 +436,15 @@ void __fastcall TFlatPanel::Paint()
 		Parent->Perform(WM_ERASEBKGND, (NativeUInt)memoryHDC, (NativeInt)0);
 		Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt) PRF_CLIENT);
 
+
+		////graph->DrawImage()
+
+
 		RestoreDC(memoryHDC, saveIdx);
+
 	}
 	else {
+    // Parent is the form
 		graph = new Gdiplus::Graphics(Canvas->Handle);
 	}
 #endif
@@ -533,6 +584,7 @@ void __fastcall TFlatPanel::OnImageChange(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TFlatPanel::SetImages(TImageList* Value)
 {
+	/*
 	if (FImages != NULL) {
 		FImages->UnRegisterChanges(FImagesChangeLink);
 	}
@@ -541,9 +593,9 @@ void __fastcall TFlatPanel::SetImages(TImageList* Value)
 	if (FImages != NULL) {
 		FImages->RegisterChanges(FImagesChangeLink);
 		FImages->FreeNotification(this);
-    CheckMinSize();
+		CheckMinSize();
 	}
-  Invalidate();
+  Invalidate();*/
 }
 //---------------------------------------------------------------------------
 void __fastcall TFlatPanel::SetBorderWidth(int Value)
@@ -598,12 +650,6 @@ void TFlatPanel::CheckMinSize()
 void __fastcall TFlatPanel::ConstrainedResize(int &MinWidth, int &MinHeight, int &MaxWidth, int &MaxHeight)
 {
 	//SetRadius(FRadius);
-}
-//---------------------------------------------------------------------------
-void __fastcall TFlatPanel::SetImage(TPngImage* Image)
-{
-	FImage->Assign(Image);
-  PngDrawer->SetImage(FImage);
 }
 //---------------------------------------------------------------------------
 namespace Flatpanel

@@ -3,6 +3,8 @@
 #define PngDrawerH
 //---------------------------------------------------------------------------
 #include "PngImageEx.h"
+#include <Gdiplus.h>
+using namespace Gdiplus;
 //---------------------------------------------------------------------------
 class TPngDrawer : public TObject
 {
@@ -20,7 +22,7 @@ public:
 		// Normal functions
 		void DoRepaint();
 
-		void SetImage(TGraphic* Graphic);
+		void AssignImage(TGraphic* Graphic);
 
 __published:
 	__property TBitmap* Bitmap = {read=FBitmap, write=SetBitmap, default=NULL};
@@ -29,6 +31,7 @@ __published:
 
 };
 //---------------------------------------------------------------------------
+bool PngImageAssignToGdipBitmap(Gdiplus::Bitmap* Bitmap, TPngImage* PngImage, bool Premultiplied=true);
 void PngImageAssignToBitmap(TBitmap* Bitmap, TPngImage* PngImage, bool Premultiplied=true);
 //---------------------------------------------------------------------------
 #endif

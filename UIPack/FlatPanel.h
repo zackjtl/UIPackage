@@ -36,7 +36,7 @@ private:
 	eBorderType FBorderType;
 	TRoundedCorner FRoundedCorner;
 	TImageList* FImages;
-	TChangeLink* FImagesChangeLink;
+	////TChangeLink* FImagesChangeLink;
 	TColor FShadowColorStart;
 	TColor FShadowColorEnd;
 	TPngImage* FImage;
