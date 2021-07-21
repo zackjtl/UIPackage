@@ -242,6 +242,20 @@ void TFlatPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rec
 	Path->CloseFigure();
 }
 //---------------------------------------------------------------------------
+// TODO:
+// Node about user image drawing:
+// We draw user image with following modes
+// 1: Texture mode: Draw image as the texture of the shape, it can fit the shape.
+// 2: Central mode: Draw image on the central of the shape,
+//    but will overlay shape when it is bigger then the shape
+// 3: Stetch mode: Draw image from original point (0,0) and fillup whole face,
+//    the image will be stretch when it is smaller than the shape.
+//    This is not proper for rounded shape too.
+//
+// The other image arguments:
+// Autosize: Let the object to resize to fit the selected image (need to consider the shadow also)
+// Opacity: Opacity of the image (minor feature)
+//---------------------------------------------------------------------------
 void TFlatPanel::FillRoundRect(Gdiplus::Graphics& graph,
 																	Gdiplus::Rect Rect,
 																	Gdiplus::Color BodyColor,
