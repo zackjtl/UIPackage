@@ -67,6 +67,34 @@ TChunk* FindChunktRNS(TPngImage* Image)
   return NULL;
 }
 //---------------------------------------------------------------------------
+bool VCLBitmapAssignToGdipBitmap(Gdiplus::Bitmap* Bitmap, TBitmap* Image)
+{
+	bool available = true;
+
+	BitmapData* bdt = new BitmapData();
+	Gdiplus::Rect rc(0, 0, Image->Width, Image->Height);
+
+	Bitmap->LockBits(&rc, ImageLockModeWrite, PixelFormat24bppRGB, bdt);
+
+	for (int y = 0; y < bdt->Height; ++y) {
+		TRGBQuad* pBitmap = (TRGBQuad*)((BYTE*)bdt->Scan0 + y * bdt->Stride);
+		TRGBTriple* pSrc = (TRGBTriple*)Image->ScanLine[y];
+		
+		for (int x = 0; x < bdt->Width; ++x) {
+
+			pBitmap[x].rgbBlue = pSrc[x].rgbtBlue;
+			pBitmap[x].rgbGreen = pSrc[x].rgbtGreen;
+			pBitmap[x].rgbRed = pSrc[x].rgbtRed;
+			pBitmap[x].rgbReserved = 0xFF;
+		}
+	}
+	Bitmap->UnlockBits(bdt);
+
+	delete bdt;
+
+  return available;
+}
+//---------------------------------------------------------------------------
 bool PngImageAssignToGdipBitmap(Gdiplus::Bitmap* Bitmap, TPngImage* PngImage, bool Premultiplied)
 {
 	bool available = true;

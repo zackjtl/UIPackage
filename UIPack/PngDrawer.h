@@ -33,5 +33,7 @@ __published:
 //---------------------------------------------------------------------------
 bool PngImageAssignToGdipBitmap(Gdiplus::Bitmap* Bitmap, TPngImage* PngImage, bool Premultiplied=true);
 void PngImageAssignToBitmap(TBitmap* Bitmap, TPngImage* PngImage, bool Premultiplied=true);
+
+bool VCLBitmapAssignToGdipBitmap(Gdiplus::Bitmap* Bitmap, TBitmap* Image);
 //---------------------------------------------------------------------------
 #endif

@@ -6,9 +6,14 @@
 
 #include "FlatPanel.h"
 #include "DrawFunc.h"
+#include <Vcl.Imaging.jpeg.hpp>
+
+#include <typeinfo>
+#include <string>
 #include <Vcl.Buttons.hpp>
 #pragma package(smart_init)
 using namespace Gdiplus;
+using namespace std;
 //---------------------------------------------------------------------------
 // ValidCtrCheck is used to assure that the components created do not have
 // any pure virtual functions.
@@ -32,10 +37,8 @@ __fastcall TFlatPanel::TFlatPanel(TComponent* Owner)
 	FLastRoundedCorner = -1;
 
 	FImage = new TPngImage();
-	PngDrawer = new TPngDrawer();
 
-  FImage->OnChange = OnPictureChange;
-  PngDrawer->OnDoRepaint = DoRepaint;
+  FPicture = new TPicture();
 
 	this->DoubleBuffered = true;
 }
@@ -64,7 +67,11 @@ void __fastcall TFlatPanel::OnPictureChange(TObject* Obj)
 void __fastcall TFlatPanel::SetImage(TPngImage* Image)
 {
 	FImage->Assign(Image);
-	////PngDrawer->AssignImage(FImage);
+}
+//---------------------------------------------------------------------------
+void __fastcall TFlatPanel::SetPicture(TPicture* Picture)
+{
+  FPicture->Assign(Picture);
 }
 //---------------------------------------------------------------------------
 Gdiplus::Color ColorFromTColor(TColor Val)
@@ -75,84 +82,6 @@ Gdiplus::Color ColorFromTColor(TColor Val)
 }
 //---------------------------------------------------------------------------
 #define PointFrom(P, ShiftX, ShiftY) Gdiplus::Point(P.X + ShiftX, P.Y + ShiftY)
-//---------------------------------------------------------------------------
-void TFlatPanel::GetTopBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
-{
-	// diameter can't exceed width or height
-	if(Radius > Rect.Width) return;
-
-	// define a corner
-	//Gdiplus::Rect corner(Rect.X, Rect.Y, Dia, Dia);
-
-	// begin path
-	Path->Reset();
-
-	Gdiplus::Point l_t(Rect.X, Rect.Y);
-	Gdiplus::Point r_t(Rect.X + Rect.Width - 1, Rect.Y);
-
-	// top left
-	Path->AddLine(PointFrom(l_t, (FRoundedCorner.Contains(eRC::LT) ? Radius : 0), 0), PointFrom(r_t, (FRoundedCorner.Contains(eRC::RT) ? -Radius : 0), 0));
-
-	// end path
-	Path->CloseFigure();
-}
-//---------------------------------------------------------------------------
-void TFlatPanel::GetLeftBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
-{
-	// diameter can't exceed width or height
-	if(Radius > Rect.Height) return;
-
-	// begin path
-	Path->Reset();
-
-	Gdiplus::Point l_t(Rect.X, Rect.Y);
-	Gdiplus::Point l_b(l_t.X, Rect.Y + Rect.Height - 1);
-
-	// top left
-	Path->AddLine(PointFrom(l_t, 0, (FRoundedCorner.Contains(eRC::LT) ? Radius : 0)), PointFrom(l_b, 0, (FRoundedCorner.Contains(eRC::LB) ? -Radius : 0)));
-
-	// end path
-	Path->CloseFigure();
-}
-//---------------------------------------------------------------------------
-void TFlatPanel::GetRightBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
-{
-	// diameter can't exceed width or height
-	if(Radius > Rect.Height) return;
-
-	// begin path
-	Path->Reset();
-
-	Gdiplus::Point r_t(Rect.X + Rect.Width - 1, Rect.Y);
-	Gdiplus::Point r_b(r_t.X, Rect.Y + Rect.Height - 1);
-
-	// top left
-	Path->AddLine(PointFrom(r_t, 0, (FRoundedCorner.Contains(eRC::RT) ? Radius : 0)), PointFrom(r_b, 0, (FRoundedCorner.Contains(eRC::RB) ? -Radius : 0)));
-
-	// end path
-	Path->CloseFigure();
-}
-//---------------------------------------------------------------------------
-void TFlatPanel::GetBottomBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius)
-{
-	// diameter can't exceed width or height
-	if(Radius > Rect.Width) return;
-
-	// define a corner
-	//Gdiplus::Rect corner(Rect.X, Rect.Y, Dia, Dia);
-
-	// begin path
-	Path->Reset();
-
-	Gdiplus::Point r_b(Rect.X + Rect.Width - 1, Rect.Y + Rect.Height - 1);
-	Gdiplus::Point l_b(Rect.X, Rect.Y + Rect.Height - 1);
-
-	// top left
-	Path->AddLine(PointFrom(l_b, (FRoundedCorner.Contains(eRC::LB) ? Radius : 0), 0), PointFrom(r_b, (FRoundedCorner.Contains(eRC::RB) ? -Radius : 0), 0));
-
-	// end path
-	Path->CloseFigure();
-}
 //---------------------------------------------------------------------------
 void TFlatPanel::GetRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect)
 {
@@ -255,18 +184,17 @@ void TFlatPanel::GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rec
 // The other image arguments:
 // Autosize: Let the object to resize to fit the selected image (need to consider the shadow also)
 // Opacity: Opacity of the image (minor feature)
+
+
 //---------------------------------------------------------------------------
-void TFlatPanel::FillRoundRect(Gdiplus::Graphics& graph,
-																	Gdiplus::Rect Rect,
-																	Gdiplus::Color BodyColor,
-																	Gdiplus::Color BorderColor,
-																	eBorderType BT,
-																	int BWidth,
-																	int Radius,
-																	bool Gradient)
+// From rectangle to the shape path (maybe rounded or rectangle)
+//---------------------------------------------------------------------------
+void TFlatPanel::GenerateShapePath(Gdiplus::Rect Rect, int Radius, int BorderWidth, Gdiplus::GraphicsPath *Path)
 {
-	if (BWidth > 0) {
-		int bodyShrink = BWidth / 2;
+
+
+	if (BorderWidth > 0) {
+		int bodyShrink = BorderWidth / 2;
 		Rect.X += bodyShrink;
 		Rect.Y += bodyShrink;
 		Rect.Width -= (bodyShrink * 2);
@@ -274,142 +202,186 @@ void TFlatPanel::FillRoundRect(Gdiplus::Graphics& graph,
 	}
   int dia = 2 * Radius;
 
-	////Gdiplus::Graphics graph(canvas->Handle);
-	graph.SetSmoothingMode(SmoothingModeHighQuality);
-
-	// set to pixel mode
-	int oldPageUnit = graph.SetPageUnit(UnitPixel);
-
-	// define the pen
-	Gdiplus::Pen pen(BorderColor, BWidth);
-	pen.SetAlignment(PenAlignmentCenter);
-
 	// get the corner path
 	GraphicsPath path;
 
 	// get path
 	if (dia > 0) {
-		GetRoundRectPath(&path, Rect, dia);
+		GetRoundRectPath(Path, Rect, dia);
 	}
 	else {
-    GetRectPath(&path, Rect);
+		GetRectPath(Path, Rect);
 	}
+}
+//---------------------------------------------------------------------------
+void TFlatPanel::GetShadowAndBodyRect(Gdiplus::Rect& Rect, Gdiplus::Rect& ShadowRect, Gdiplus::Rect& BodyRect)
+{
+	if (ShadowShiftX >= 0) {
+		ShadowRect.X = Rect.X + ShadowShiftX;
+		ShadowRect.Width = Rect.Width - ShadowShiftX;
+
+		BodyRect.X = Rect.X;
+		BodyRect.Width = ShadowRect.Width;
+	}
+	else {
+		BodyRect.X = Rect.X - ShadowShiftX;
+		BodyRect.Width = Rect.Width - ShadowShiftX;
+
+		ShadowRect.X = Rect.X;
+		ShadowRect.Width = BodyRect.Width;
+  }
+
+	if (ShadowShiftY >= 0) {
+		ShadowRect.Y = Rect.Y + ShadowShiftY;
+		ShadowRect.Height = Rect.Height - ShadowShiftY;
+
+		BodyRect.Y = Rect.Y;
+		BodyRect.Height = ShadowRect.Height;
+	}
+	else {
+		BodyRect.Y = Rect.Y - ShadowShiftY;
+		BodyRect.Height = Rect.Height - ShadowShiftY;
+
+		ShadowRect.Y = Rect.Y;
+		ShadowRect.Height = BodyRect.Height;
+  }
+}
+//---------------------------------------------------------------------------
+void TFlatPanel::DrawBorder(Gdiplus::Graphics& Graph,
+													Gdiplus::GraphicsPath& Path,
+													Gdiplus::Color BorderColor,
+													int BorderWidth)
+{
+	// set to pixel mode
+	int oldPageUnit = Graph.SetPageUnit(UnitPixel);
+
+	// define the pen
+	Gdiplus::Pen pen(BorderColor, BorderWidth);
+	pen.SetAlignment(PenAlignmentCenter);
+
+	Graph.DrawPath(&pen, &Path);
+
+	// restore page unit
+	Graph.SetPageUnit((Unit)oldPageUnit);
+}
+//---------------------------------------------------------------------------
+void TFlatPanel::DrawBodyImage(Gdiplus::Graphics& Graph,
+															 Gdiplus::Rect& Rect,
+															 Gdiplus::GraphicsPath& Path,
+															 Gdiplus::Bitmap& Bitmap)
+{
+	if (FImage == NULL)
+    return;
+
+	// set to pixel mode
+	int oldPageUnit = Graph.SetPageUnit(UnitPixel);
+
+	Graph.SetClip(&Path);
+
+	if (FImage != NULL) {
+		// Draw image at the center
+		Gdiplus::Rect imgRect;
+
+		if (Bitmap.GetWidth() < Rect.Width)
+			imgRect.X = Rect.X + (Rect.Width - Bitmap.GetWidth()) / 2;
+		else
+			imgRect.X = Rect.X;
+
+		if (Bitmap.GetHeight() < Rect.Height)
+			imgRect.Y = Rect.Y + (Rect.Height - Bitmap.GetHeight()) / 2;
+		else
+			imgRect.Y = Rect.Y;
+
+		imgRect.Width = Bitmap.GetWidth();
+		imgRect.Height = Bitmap.GetHeight();
+		Graph.DrawImage(&Bitmap, imgRect);
+	}
+
+	// restore page unit
+	Graph.SetPageUnit((Unit)oldPageUnit);
+}
+//---------------------------------------------------------------------------
+void TFlatPanel::DrawBodyFillColor(Gdiplus::Graphics& Graph,
+													Gdiplus::Rect& Rect,
+													Gdiplus::GraphicsPath& Path,
+													Gdiplus::Color Color)
+{
+	// set to pixel mode
+	int oldPageUnit = Graph.SetPageUnit(UnitPixel);
+
+	Gdiplus::SolidBrush brush(Color);
+	Graph.SetClip(&Path);
+	Graph.FillRectangle((const Gdiplus::Brush*)&brush, Rect);
+
+	// restore page unit
+	Graph.SetPageUnit((Unit)oldPageUnit);
+}
+//---------------------------------------------------------------------------
+void TFlatPanel::DrawShadow(Gdiplus::Graphics& Graph,
+													Gdiplus::Rect& Rect,
+													Gdiplus::GraphicsPath& Path,
+													Gdiplus::Color ShadowColorStart,
+													Gdiplus::Color ShadowColorEnd)
+{
+	// set to pixel mode
+	int oldPageUnit = Graph.SetPageUnit(UnitPixel);
 
 	// fill
-	if (Gradient) {
-		Gdiplus::PathGradientBrush brush(&path);
+	Gdiplus::PathGradientBrush brush(&Path);
 
-		brush.SetCenterColor(BodyColor);
+	brush.SetCenterColor(ShadowColorStart);
 
-		Gdiplus::PointF cent;
-		brush.GetCenterPoint(&cent);
+	Gdiplus::PointF cent;
+	brush.GetCenterPoint(&cent);
 
-		// TODO: Allows to control the gradient center bias
-		cent.X += (-Rect.X) + Rect.Width * (FShadowCenterX / 100.00);
-		cent.Y += (-Rect.Y) + Rect.Height * (FShadowCenterY / 100.0);
+	// TODO: Allows to control the gradient center bias
+	cent.X += (-Rect.X) + Rect.Width * (FShadowCenterX / 100.00);
+	cent.Y += (-Rect.Y) + Rect.Height * (FShadowCenterY / 100.0);
 
-		brush.SetCenterPoint(cent);
+	brush.SetCenterPoint(cent);
 
-		Gdiplus::Color surroundClrs[] = {BorderColor};
-		int surroundColorCnt = 1;
+	Gdiplus::Color surroundClrs[] = {ShadowColorEnd};
+	int surroundColorCnt = 1;
 
-		brush.SetSurroundColors(surroundClrs, &surroundColorCnt);
+	brush.SetSurroundColors(surroundClrs, &surroundColorCnt);
 
-		graph.FillPath(&brush, &path);
-	}
-	else {
-    Gdiplus::Brush* brush = NULL;
+	Graph.FillPath(&brush, &Path);
 
-		if (FImage != NULL) {
-			Gdiplus::Bitmap img(FImage->Width, FImage->Height, PixelFormat32bppARGB);
-
-			if (false /*PngImageAssignToGdipBitmap(&img, FImage)*/) {
-				brush = new Gdiplus::TextureBrush(&img);
-			}
-			else {
-        brush = new Gdiplus::SolidBrush(BodyColor);
-      }
-		}
-		else {
-			brush = new Gdiplus::SolidBrush(BodyColor);
-    }
-
-		graph.FillPath(brush, &path);
-
-		if (!Gradient) {
-      // Draw image at the center
-			Gdiplus::Rect imgRect;
-
-			if (FImage->Width < Rect.Width)
-				imgRect.X = Rect.X + (Rect.Width - FImage->Width) / 2;
-			else
-				imgRect.X = Rect.X;
-
-			if (FImage->Height < Rect.Height)
-				imgRect.Y = Rect.Y + (Rect.Height - FImage->Height) / 2;
-			else
-				imgRect.Y = Rect.Y;
-
-			imgRect.Width = FImage->Width;
-			imgRect.Height = FImage->Height;
-
-			Gdiplus::Bitmap img(FImage->Width, FImage->Height, PixelFormat32bppARGB);
-			PngImageAssignToGdipBitmap(&img, FImage);
-			graph.DrawImage(&img, imgRect);
-    }
-
-    delete brush;
-	}
-
-	// draw the border last so it will be on top
-	if (dia != 0) {
-		if (BT == btNormal)
-			graph.DrawPath(&pen, &path);
-		else {
-			if (BT == btTopOnly || BT == btHorizontal) {
-				GraphicsPath bound;
-				GetTopBoundPath(&bound, Rect, Radius);
-				graph.DrawPath(&pen, &bound);
-			}
-			if (BT == btBottomOnly || BT == btHorizontal) {
-				GraphicsPath bound;
-				GetBottomBoundPath(&bound, Rect, Radius);
-				graph.DrawPath(&pen, &bound);
-			}
-			if (BT == btLeftOnly || BT == btVertical) {
-				GraphicsPath bound;
-				GetLeftBoundPath(&bound, Rect, Radius);
-				graph.DrawPath(&pen, &bound);
-			}
-			if (BT == btRightOnly || BT == btVertical) {
-				GraphicsPath bound;
-				GetRightBoundPath(&bound, Rect, Radius);
-				graph.DrawPath(&pen, &bound);
-			}
-		}
-	}
 	// restore page unit
-	graph.SetPageUnit((Unit)oldPageUnit);
+	Graph.SetPageUnit((Unit)oldPageUnit);
+}
+//---------------------------------------------------------------------------
+void TFlatPanel::ClipParentDrawing(HDC DC)
+{
+	int saveIdx = SaveDC(DC);
+	TPoint p;
+	GetViewportOrgEx(DC, &p);
+	SetViewportOrgEx(DC, p.x - this->Left, p.y - this->Top, NULL);
+	IntersectClipRect(DC, 0, 0, Parent->ClientWidth, Parent->ClientHeight);
+	Parent->Perform(WM_ERASEBKGND, (NativeUInt)DC, (NativeInt)0);
+	Parent->Perform(WM_PRINTCLIENT, (NativeUInt)DC, (NativeInt) PRF_CLIENT);
+
+	RestoreDC(DC, saveIdx);
 }
 //---------------------------------------------------------------------------
 void __fastcall TFlatPanel::Paint()
 {
 	if (!FShadowEnabled) {
-		FShadowWidthX = 0;
-		FShadowWidthY = 0;
+		FShadowShiftX = 0;
+		FShadowShiftY = 0;
   }
+	Gdiplus::Rect bodyRect, shadowRect;
+	Gdiplus::Rect orgRect(ClientRect.Left, ClientRect.Top, ClientRect.Width(), ClientRect.Height());
 
-	int bodyX = 0;
-	int bodyY = 0;
-	int bodyWidth = ClientWidth-FShadowWidthX;
-	int bodyHeight = ClientHeight-FShadowWidthY;
+	if (FShadowEnabled)
+		GetShadowAndBodyRect(orgRect, shadowRect, bodyRect);
+	else
+		bodyRect = orgRect;
 
 	int trueRadius = FRadius;
 
-	if (trueRadius > (bodyWidth / 2)) trueRadius = bodyWidth / 2;
-	if (trueRadius > (bodyHeight / 2)) trueRadius = bodyHeight / 2;
-
-	int bias = trueRadius == 0 ? 1 : 0;
+	if (trueRadius > (bodyRect.Width / 2)) trueRadius = bodyRect.Width / 2;
+	if (trueRadius > (bodyRect.Height / 2)) trueRadius = bodyRect.Height / 2;
 
 	bool doubleBuffering = false;
 
@@ -425,50 +397,83 @@ void __fastcall TFlatPanel::Paint()
 	HDC memoryHDC;
 	HBITMAP hMemoryBmp;
 	HBITMAP hOldBmp;
-#if 1
+
+	string imageType = typeid(FImage).name();
+
 	if ((Parent != Owner)) {
-    // Parent is the another component
-    doubleBuffering = true;
+    /* The double buffering implementation */
+		doubleBuffering = true;
 		memoryHDC = CreateCompatibleDC(Canvas->Handle);
 		hMemoryBmp = CreateCompatibleBitmap(Canvas->Handle, Width, Height);
 		hOldBmp = (HBITMAP)SelectObject(memoryHDC, hMemoryBmp);
 
-		// To copy the parent as background
+		/* Following method has no effect, just written for notice */
 		////HDC wnhdc = GetWindowDC(this->Parent->Handle);
 		////BitBlt(memoryHDC, 0, 0, Width, Height, wnhdc, Left, Top, SRCCOPY);
-
 		////DrawParentImage(this, memoryHDC, true);
 
-		// Under trying
+		/* Generate graphics with the memory DC */
 		graph = new Gdiplus::Graphics(memoryHDC);
-
-		int saveIdx = SaveDC(memoryHDC);
-		TPoint p;
-		GetViewportOrgEx(memoryHDC, &p);
-		SetViewportOrgEx(memoryHDC, p.x - this->Left, p.y - this->Top, NULL);
-		IntersectClipRect(memoryHDC, 0, 0, Parent->ClientWidth, Parent->ClientHeight);
-		Parent->Perform(WM_ERASEBKGND, (NativeUInt)memoryHDC, (NativeInt)0);
-		Parent->Perform(WM_PRINTCLIENT, (NativeUInt)memoryHDC, (NativeInt) PRF_CLIENT);
-
-
-		////graph->DrawImage()
-
-
-		RestoreDC(memoryHDC, saveIdx);
-
+		ClipParentDrawing(memoryHDC);
 	}
 	else {
-    // Parent is the form
+		/* Parent is a form, can't use double buffering method */
 		graph = new Gdiplus::Graphics(Canvas->Handle);
 	}
-#endif
-	if (!FTransparent) {
-		if (FShadowEnabled) {
-			FillRoundRect(*graph, Gdiplus::Rect(FShadowWidthX, FShadowWidthY, bodyWidth, bodyHeight), shadowColorStart, shadowColorEnd, btNone, 0, trueRadius, true);
-		}
-		FillRoundRect(*graph, Gdiplus::Rect(bodyX, bodyY, bodyWidth, bodyHeight), bodyColor, borderColor, FBorderType, BorderWidth, trueRadius, false);
+
+	graph->SetSmoothingMode(SmoothingModeHighQuality);
+
+	/* Generate the path of the shape with radius and border arguments */
+	Gdiplus::GraphicsPath bodyShape;
+	GenerateShapePath(bodyRect, trueRadius, BorderWidth, &bodyShape);
+
+	if (FShadowEnabled) {
+    /* Draw the shadow with the same shape that shifted from body */
+		Gdiplus::GraphicsPath shadowPath;
+		GenerateShapePath(shadowRect, trueRadius, BorderWidth, &shadowPath);
+		DrawShadow(*graph, shadowRect, shadowPath, shadowColorStart, shadowColorEnd);
 	}
-	////delete graph;
+	/* Fill color on the body shape */
+	DrawBodyFillColor(*graph, bodyRect, bodyShape, bodyColor);
+
+	if (FPicture->Graphic != NULL) {
+		/* Draw image within the body shape */
+		Gdiplus::Bitmap bitmap(FPicture->Graphic->Width, FPicture->Graphic->Height, PixelFormat32bppARGB);
+
+		if (typeid(*FPicture->Graphic) == typeid(TPngImageEx) ||
+				typeid(*FPicture->Graphic) == typeid(TPngImage)) {
+
+			PngImageAssignToGdipBitmap(&bitmap, (TPngImage*)FPicture->Graphic);
+			DrawBodyImage(*graph, bodyRect, bodyShape, bitmap);
+			imageType = "";
+		}
+		else if (typeid(*FPicture->Graphic) == typeid(TJPEGImage)) {
+			TJPEGImage* jpg = (TJPEGImage*)FPicture->Graphic;
+      jpg->DIBNeeded();
+			TBitmap* bmp = new TBitmap();
+			bmp->Assign(jpg);
+
+			VCLBitmapAssignToGdipBitmap(&bitmap, bmp);
+      DrawBodyImage(*graph, bodyRect, bodyShape, bitmap);
+
+			imageType = "";
+		}
+		else {
+      imageType = "";
+		}
+	}
+	else if (FImage != NULL) {
+		Gdiplus::Bitmap bitmap(FImage->Width, FImage->Height, PixelFormat32bppARGB);
+		PngImageAssignToGdipBitmap(&bitmap, FImage);
+		DrawBodyImage(*graph, bodyRect, bodyShape, bitmap);
+	}
+
+	if (FBorderWidth > 0) {
+    /* Draw border after body finished */
+		DrawBorder(*graph, bodyShape, borderColor, FBorderWidth);
+	}
+
+  /* Delete dynamic elements */
 	if (doubleBuffering) {
 		::BitBlt(Canvas->Handle, 0, 0, ClientWidth, ClientHeight, memoryHDC, 0, 0, SRCCOPY);
 
@@ -529,37 +534,6 @@ void __fastcall TFlatPanel::SetTransparent(bool Value)
 void __fastcall TFlatPanel::SetRadius(unsigned int Radius)
 {
 	FRadius = Radius;
-	/*
-	HRGN rgn;
-
-	if (Radius == 0) {
-		rgn = CreateRectRgn(0, 0, ClientWidth, ClientHeight);
-		SetWindowRgn(Handle, rgn, true);
-	}
-	else {
-
-		rgn = CreateRoundRectRgn(0, 0, ClientWidth, ClientHeight, FRadius-1 , FRadius-1);
-
-		if (!FRoundedCorner.Contains(eRC::LT)) { // LT
-			HRGN rectRgn = CreateRectRgn(0, 0, FRadius, FRadius);
-			CombineRgn(rgn, rectRgn, rgn, RGN_OR);
-		}
-		if (!FRoundedCorner.Contains(eRC::RT)) { // RT
-			HRGN rectRgn = CreateRectRgn(ClientWidth-FRadius, 0, ClientWidth-1, FRadius);
-			CombineRgn(rgn, rectRgn, rgn, RGN_OR);
-		}
-		if (!FRoundedCorner.Contains(eRC::LB)) { // LB
-			HRGN rectRgn = CreateRectRgn(0, ClientHeight-FRadius, FRadius, ClientHeight-1);
-			CombineRgn(rgn, rectRgn, rgn, RGN_OR);
-		}
-		if (!FRoundedCorner.Contains(eRC::RB)) { // RB
-			HRGN rectRgn = CreateRectRgn(ClientWidth-FRadius, ClientHeight-FRadius, ClientWidth-1, ClientHeight-1);
-			CombineRgn(rgn, rectRgn, rgn, RGN_OR);
-		}
-
-		SetWindowRgn(Handle, rgn, true);
-	} */
-
 
 	Invalidate();
 }
@@ -624,18 +598,18 @@ void __fastcall TFlatPanel::SetShadowEnabled(bool Value)
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TFlatPanel::SetShadowWidthX(int Value)
+void __fastcall TFlatPanel::SetShadowShiftX(int Value)
 {
 	if (Value > (Width / 2)) Value = Width / 2;
 
-	FShadowWidthX = Value;
+	FShadowShiftX = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------
-void __fastcall TFlatPanel::SetShadowWidthY(int Value)
+void __fastcall TFlatPanel::SetShadowShiftY(int Value)
 {
 	if (Value > (Height / 2)) Value = Height / 2;
-	FShadowWidthY = Value;
+	FShadowShiftY = Value;
 	Invalidate();
 }
 //---------------------------------------------------------------------------

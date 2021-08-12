@@ -40,6 +40,7 @@ private:
 	TColor FShadowColorStart;
 	TColor FShadowColorEnd;
 	TPngImage* FImage;
+  TPicture* FPicture;
 
 	int FBodyX;
 	int FBodyY;
@@ -49,8 +50,8 @@ private:
 
   bool FShadowEnabled;
 
-	int FShadowWidthX;
-	int FShadowWidthY;
+	int FShadowShiftX;
+  int FShadowShiftY;
 
 	float FShadowCenterX;
 	float FShadowCenterY;
@@ -62,7 +63,7 @@ private:
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	ULONG_PTR  gdiplusToken;
 
-  TPngDrawer*  PngDrawer;
+  ////TPngDrawer*  PngDrawer;
 
 protected:
 	void __fastcall Paint();
@@ -73,21 +74,35 @@ protected:
 	void __fastcall DrawImageByIndex(int Index, int x, int y);
   void __fastcall Loaded();
 
-	void GetTopBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius);
-	void GetLeftBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius);
-	void GetRightBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius);
-	void GetBottomBoundPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Radius);
-
 	void GetRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect);
 	void GetRoundRectPath(Gdiplus::GraphicsPath *Path, Gdiplus::Rect Rect, int Dia);
-	void FillRoundRect(Gdiplus::Graphics& graph,
-										 Gdiplus::Rect Rect,
-										 Gdiplus::Color BodyColor,
-										 Gdiplus::Color BorderColor,
-										 eBorderType BT,
-										 int BorderWidth,
-										 int Radius,
-										 bool Gradient);
+
+	void GenerateShapePath(Gdiplus::Rect Rect, int Radius, int BorderWidth, Gdiplus::GraphicsPath *Path);
+
+	void DrawBorder(Gdiplus::Graphics& Graph,
+									Gdiplus::GraphicsPath& Path,
+									Gdiplus::Color BorderColor,
+									int BorderWidth);
+
+	void DrawBodyFillColor(Gdiplus::Graphics& Graph,
+                         Gdiplus::Rect& Rect,
+												 Gdiplus::GraphicsPath& Path,
+												 Gdiplus::Color Color);
+
+	void DrawBodyImage(Gdiplus::Graphics& Graph,
+										 Gdiplus::Rect& Rect,
+										 Gdiplus::GraphicsPath& Path,
+										 Gdiplus::Bitmap& Bitmap);
+
+	void DrawShadow(Gdiplus::Graphics& Graph,
+									Gdiplus::Rect& Rect,
+                  Gdiplus::GraphicsPath& Path,
+									Gdiplus::Color ShadowColorStart,
+									Gdiplus::Color ShadowColorEnd);
+
+  void GetShadowAndBodyRect(Gdiplus::Rect& Rect, Gdiplus::Rect& ShadowRect, Gdiplus::Rect& BodyRect);
+
+  void ClipParentDrawing(HDC DC);
 
 	void CheckMinSize();
 
@@ -105,16 +120,19 @@ public:
 
   void __fastcall SetShadowEnabled(bool Value);
 
-	void __fastcall SetShadowWidthX(int Value);
-	void __fastcall SetShadowWidthY(int Value);
+	void __fastcall SetShadowShiftX(int Value);
+	void __fastcall SetShadowShiftY(int Value);
+
+	void __fastcall SetShadowCenterX(float Value);
+	void __fastcall SetShadowCenterY(float Value);
 
 	void __fastcall SetShadowColorStart(TColor Value);
 	void __fastcall SetShadowColorEnd(TColor Value);
 
 	void __fastcall SetTransparent(bool Value);
-	void __fastcall SetShadowCenterX(float Value);
-	void __fastcall SetShadowCenterY(float Value);
+
 	void __fastcall SetImage(TPngImage* Image);
+  void __fastcall SetPicture(TPicture* Picture);
 
   // Notify Event Functions
 	void __fastcall DoRepaint(TObject* Obj);
@@ -140,13 +158,14 @@ __published:
 	__property TColor ShadowColorStart = {read=FShadowColorStart, write=SetShadowColorStart, default=clBlack};
 	__property TColor ShadowColorEnd = {read=FShadowColorEnd, write=SetShadowColorEnd, default=clWhite};
 
-	__property int ShadowWidthX = {read=FShadowWidthX, write=SetShadowWidthX};
-	__property int ShadowWidthY = {read=FShadowWidthY, write=SetShadowWidthY};
+	__property int ShadowShiftX = {read=FShadowShiftX, write=SetShadowShiftX};
+	__property int ShadowShiftY = {read=FShadowShiftY, write=SetShadowShiftY};
 
 	__property float ShadowCenterX = {read=FShadowCenterX, write=SetShadowCenterX, default=0};
 	__property float ShadowCenterY = {read=FShadowCenterY, write=SetShadowCenterY, default=0};
 
-  __property TPngImage* Image = {read=FImage, write=SetImage};
+	__property TPngImage* Image = {read=FImage, write=SetImage};
+  __property TPicture* Picture = {read=FPicture, write=SetPicture};
 
 };
 //---------------------------------------------------------------------------

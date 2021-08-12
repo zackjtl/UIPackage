@@ -9,12 +9,13 @@
 #include <Vcl.Forms.hpp>
 #include <Vcl.ExtCtrls.hpp>
 #include "FlatPanel.h"
+#include <Vcl.Imaging.jpeg.hpp>
+#include <Vcl.Imaging.pngimage.hpp>
 //---------------------------------------------------------------------------
 class TForm1 : public TForm
 {
 __published:	// IDE-managed Components
 	TFlatPanel *FlatPanel1;
-	TFlatPanel *FlatPanel2;
 private:	// User declarations
 public:		// User declarations
 	__fastcall TForm1(TComponent* Owner);
