@@ -15,8 +15,8 @@ object Form1: TForm1
   PixelsPerInch = 96
   TextHeight = 12
   object FlatPanel1: TFlatPanel
-    Left = 368
-    Top = 152
+    Left = 224
+    Top = 144
     Width = 553
     Height = 441
     BorderColor = clGray

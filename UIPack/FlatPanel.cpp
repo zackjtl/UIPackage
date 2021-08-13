@@ -449,9 +449,14 @@ void __fastcall TFlatPanel::Paint()
 		}
 		else if (typeid(*FPicture->Graphic) == typeid(TJPEGImage)) {
 			TJPEGImage* jpg = (TJPEGImage*)FPicture->Graphic;
-      jpg->DIBNeeded();
+      ////jpg->DIBNeeded();
 			TBitmap* bmp = new TBitmap();
 			bmp->Assign(jpg);
+
+			if (!ComponentState.Contains(csDesigning)) {
+        // Enable this for testing resize
+				////BitmapSmoothResize(bmp, bodyRect.Width, bodyRect.Height);
+			}
 
 			VCLBitmapAssignToGdipBitmap(&bitmap, bmp);
       DrawBodyImage(*graph, bodyRect, bodyShape, bitmap);
